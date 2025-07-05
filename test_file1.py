@@ -1,29 +1,74 @@
 #!/usr/bin/env python3
 """
-Basic Python file for testing purposes
-Contains simple functions and basic operations
+Basic Python file for testing purposes.
+Contains simple functions and basic operations.
 """
 
-def add_numbers(a, b):
-    """Add two numbers and return the result"""
+def add_numbers(a: float, b: float) -> float:
+    """
+    Add two numbers and return the result.
+
+    Args:
+        a (float): First number.
+        b (float): Second number.
+
+    Returns:
+        float: Sum of a and b.
+    """
     return a + b
 
-def multiply_numbers(a, b):
-    """Multiply two numbers and return the result"""
+def multiply_numbers(a: float, b: float) -> float:
+    """
+    Multiply two numbers and return the result.
+
+    Args:
+        a (float): First number.
+        b (float): Second number.
+
+    Returns:
+        float: Product of a and b.
+    """
     return a * b
 
-def greet_user(name):
-    """Greet a user with their name"""
+def greet_user(name: str) -> str:
+    """
+    Greet a user with their name.
+
+    Args:
+        name (str): The user's name.
+
+    Returns:
+        str: Greeting message.
+    """
     return f"Hello, {name}!"
 
-def is_even(number):
-    """Check if a number is even"""
+def is_even(number: int) -> bool:
+    """
+    Check if a number is even.
+
+    Args:
+        number (int): The number to check.
+
+    Returns:
+        bool: True if number is even, False otherwise.
+    """
     return number % 2 == 0
 
-def calculate_factorial(n):
-    """Calculate factorial of a number"""
+def calculate_factorial(n: int) -> int:
+    """
+    Calculate factorial of a non-negative integer.
+
+    Args:
+        n (int): The number to calculate factorial for.
+
+    Returns:
+        int: Factorial of n.
+
+    Raises:
+        ValueError: If n is negative.
+    """
     if n < 0:
-        return None
+        raise ValueError("Factorial is not defined for negative numbers.")
     if n == 0 or n == 1:
         return 1
     result = 1
@@ -39,4 +84,4 @@ if __name__ == "__main__":
     print(f"greet_user('Alice') = {greet_user('Alice')}")
     print(f"is_even(10) = {is_even(10)}")
     print(f"is_even(7) = {is_even(7)}")
-    print(f"calculate_factorial(5) = {calculate_factorial(5)}") 
+    print(f"calculate_factorial(5) = {calculate_factorial(5)}")
