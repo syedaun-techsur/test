@@ -1,8 +1,15 @@
 {
-    "name": "test-project",
-    "version": "1.0.0",
-    "dependencies": {
-      "express": "^4.18.0",
-      "lodash": "^4.17.21"
-    }
+  "name": "test-project",
+  "version": "1.0.0",
+  "description": "A test project for demonstration purposes",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.0",
+    "lodash": "^4.17.21"
   }
+}
