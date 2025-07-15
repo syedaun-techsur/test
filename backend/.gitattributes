@@ -1,2 +1,18 @@
+# Shell script files
 /mvnw text eol=lf
+/*.sh text eol=lf
+
+# Windows batch files
 *.cmd text eol=crlf
+
+# Java source code
+*.java text eol=lf
+
+# Maven POM files (XML)
+*.xml text eol=lf
+
+# Git will handle text files with UTF-8 encoding automatically
+* text=auto
+
+# Maven build output directory - treat as binary to avoid filtering
+/backend/target/** binary
