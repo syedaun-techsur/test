@@ -1,7 +1,8 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchHello } from './api';
 
-function App() {
+function App(): JSX.Element {
   const { data, error, isLoading } = useQuery({
     queryKey: ['hello'],
     queryFn: fetchHello,
@@ -12,11 +13,13 @@ function App() {
       <h1>Full Stack Demo (Vite + Spring Boot)</h1>
       <p>
         Backend says:{' '}
-        {isLoading
-          ? 'Loading...'
-          : error
-          ? `Error: ${(error as Error).message}`
-          : data?.message}
+        {isLoading ? (
+          'Loading...'
+        ) : error ? (
+          `Error: ${(error as Error).message}`
+        ) : (
+          data?.message
+        )}
       </p>
     </div>
   );
