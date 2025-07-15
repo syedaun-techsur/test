@@ -1,2 +1,20 @@
-/mvnw text eol=lf
+# Normalize line endings for shell scripts to LF
+/backend/mvnw text eol=lf
+
+# Normalize line endings for PowerShell scripts to CRLF
+/backend/mvnw.cmd text eol=crlf
+
+# Normalize line endings for shell scripts (general)
+*.sh text eol=lf
+
+# Normalize line endings for PowerShell scripts (general)
+*.ps1 text eol=crlf
+
+# Normalize line endings for Windows batch files
 *.cmd text eol=crlf
+
+# Normalize line endings for package.json to LF (frontend scripts)
+frontend/package.json text eol=lf
+
+# Treat jar files as binary to prevent line ending conversion
+*.jar binary
