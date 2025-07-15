@@ -1,10 +1,10 @@
-HELP.md
+# Ignore Maven build output
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
+# Ignore Maven wrapper jar
+.mvn/wrapper/maven-wrapper.jar
+
+### Spring Tool Suite (STS) ###
 .apt_generated
 .classpath
 .factorypath
@@ -25,9 +25,9 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+# Ignore build directories (if any, e.g. Gradle builds)
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
