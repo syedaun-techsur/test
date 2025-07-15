@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders backend message after loading', async () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // Wait for the loading to finish and the backend message to appear
+  const messageElement = await screen.findByText(/backend says:/i, {}, { timeout: 5000 });
+  expect(messageElement).toBeInTheDocument();
 });
