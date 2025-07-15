@@ -1,2 +1,8 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+# Shell script with Unix-style line endings
+/backend/mvnw text eol=lf
+/backend/*.sh text eol=lf
+
+# Windows batch and command scripts with Windows-style line endings
+/backend/mvnw.cmd text eol=crlf
+/backend/*.cmd text eol=crlf
+/backend/*.bat text eol=crlf
