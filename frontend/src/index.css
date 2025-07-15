@@ -11,21 +11,30 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
 }
 
 a {
   font-weight: 500;
   color: #646cff;
-  text-decoration: inherit;
+  text-decoration: none;
+  transition: color 0.25s ease;
 }
-a:hover {
+a:hover,
+a:focus-visible {
   color: #535bf2;
+  text-decoration: underline;
+  outline: none;
 }
 
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  place-content: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -44,14 +53,14 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s ease;
 }
 button:hover {
   border-color: #646cff;
 }
-button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+  outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -59,8 +68,10 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
-  a:hover {
+  a:hover,
+  a:focus-visible {
     color: #747bff;
+    text-decoration: underline;
   }
   button {
     background-color: #f9f9f9;
