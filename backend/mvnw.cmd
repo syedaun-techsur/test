@@ -40,8 +40,9 @@
 @SET __MVNW_ARG0_NAME__=
 @SET MVNW_USERNAME=
 @SET MVNW_PASSWORD=
-@IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)
-@echo Cannot start maven from wrapper >&2 && exit /b 1
+@IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %* & exit /b %ERRORLEVEL%)
+@echo Cannot start maven from wrapper >&2
+@exit /b 1
 @GOTO :EOF
 : end batch / begin powershell #>
 
@@ -50,100 +51,144 @@ if ($env:MVNW_VERBOSE -eq "true") {
   $VerbosePreference = "Continue"
 }
 
-# calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
-$distributionUrl = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionUrl
-if (!$distributionUrl) {
-  Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+$scriptDir = $PSScriptRoot
+
+# Load wrapper properties
+$wrapperPropsPath = Join-Path -Path $scriptDir -ChildPath ".mvn/wrapper/maven-wrapper.properties"
+if (-Not (Test-Path $wrapperPropsPath)) {
+  Write-Error "Cannot find maven-wrapper.properties file in $scriptDir\.mvn\wrapper"
+  exit 1
+}
+$wrapperProperties = Get-Content -Raw $wrapperPropsPath | ConvertFrom-StringData
+
+$distributionUrl = $wrapperProperties['distributionUrl']
+if (-not $distributionUrl) {
+  Write-Error "cannot read distributionUrl property in $wrapperPropsPath"
+  exit 1
 }
 
-switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
+# Determine mvn or mvnd and platform-specific artifact
+switch -wildcard -casesensitive ($distributionUrl -replace '^.*/','') {
   "maven-mvnd-*" {
     $USE_MVND = $true
     $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
     $MVN_CMD = "mvnd.cmd"
-    break
   }
   default {
     $USE_MVND = $false
-    $MVN_CMD = $script -replace '^mvnw','mvn'
-    break
+    $MVN_CMD = ($MyInvocation.MyCommand.Name) -replace '^mvnw','mvn'
   }
 }
 
-# apply MVNW_REPOURL and calculate MAVEN_HOME
-# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+# Configure repository URL pattern correctly based on mvnd or not
 if ($env:MVNW_REPOURL) {
-  $MVNW_REPO_PATTERN = if ($USE_MVND) { "/org/apache/maven/" } else { "/maven/mvnd/" }
-  $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace '^.*'+$MVNW_REPO_PATTERN,'')"
+  $MVNW_REPO_PATTERN = if ($USE_MVND) { "/maven/mvnd/" } else { "/org/apache/maven/"}
+  $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace '^.*' + [regex]::Escape($MVNW_REPO_PATTERN), '')"
 }
+
 $distributionUrlName = $distributionUrl -replace '^.*/',''
 $distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$','' -replace '-bin$',''
-$MAVEN_HOME_PARENT = "$HOME/.m2/wrapper/dists/$distributionUrlNameMain"
-if ($env:MAVEN_USER_HOME) {
-  $MAVEN_HOME_PARENT = "$env:MAVEN_USER_HOME/wrapper/dists/$distributionUrlNameMain"
-}
-$MAVEN_HOME_NAME = ([System.Security.Cryptography.MD5]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
-$MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
 
-if (Test-Path -Path "$MAVEN_HOME" -PathType Container) {
+# Set Maven Home directory with SHA256 hash for consistency with security best practices
+Add-Type -AssemblyName System.Security
+function Get-Sha256Hash([string]$inputString) {
+  $bytes = [System.Text.Encoding]::UTF8.GetBytes($inputString)
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  $hashBytes = $sha256.ComputeHash($bytes)
+  return ($hashBytes | ForEach-Object { $_.ToString("x2") }) -join ''
+}
+
+$MAVEN_USER_HOME = if ($env:MAVEN_USER_HOME) { $env:MAVEN_USER_HOME } else { Join-Path $HOME ".m2" }
+$MAVEN_HOME_PARENT = Join-Path -Path $MAVEN_USER_HOME -ChildPath "wrapper/dists/$distributionUrlNameMain"
+$MAVEN_HOME_NAME = Get-Sha256Hash $distributionUrl
+$MAVEN_HOME = Join-Path -Path $MAVEN_HOME_PARENT -ChildPath $MAVEN_HOME_NAME
+
+if (Test-Path -Path $MAVEN_HOME -PathType Container) {
   Write-Verbose "found existing MAVEN_HOME at $MAVEN_HOME"
   Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
-  exit $?
+  exit 0
 }
 
-if (! $distributionUrlNameMain -or ($distributionUrlName -eq $distributionUrlNameMain)) {
+if (-not $distributionUrlNameMain -or $distributionUrlName -eq $distributionUrlNameMain) {
   Write-Error "distributionUrl is not valid, must end with *-bin.zip, but found $distributionUrl"
+  exit 1
 }
 
-# prepare tmp dir
-$TMP_DOWNLOAD_DIR_HOLDER = New-TemporaryFile
-$TMP_DOWNLOAD_DIR = New-Item -Itemtype Directory -Path "$TMP_DOWNLOAD_DIR_HOLDER.dir"
-$TMP_DOWNLOAD_DIR_HOLDER.Delete() | Out-Null
+# Prepare temporary directory
+$TMP_DOWNLOAD_DIR = Join-Path ([System.IO.Path]::GetTempPath()) ("mvnw_tmp_" + [System.Guid]::NewGuid().ToString())
+New-Item -ItemType Directory -Path $TMP_DOWNLOAD_DIR -Force | Out-Null
+
 trap {
-  if ($TMP_DOWNLOAD_DIR.Exists) {
-    try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
-    catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+  if (Test-Path $TMP_DOWNLOAD_DIR) {
+    try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force -ErrorAction SilentlyContinue } catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
   }
 }
 
-New-Item -Itemtype Directory -Path "$MAVEN_HOME_PARENT" -Force | Out-Null
+# Ensure Maven home parent directory exists
+New-Item -ItemType Directory -Path $MAVEN_HOME_PARENT -Force | Out-Null
 
 # Download and Install Apache Maven
 Write-Verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
 Write-Verbose "Downloading from: $distributionUrl"
-Write-Verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+Write-Verbose "Downloading to: $TMP_DOWNLOAD_DIR\$distributionUrlName"
 
 $webclient = New-Object System.Net.WebClient
 if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
   $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
 }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
+try {
+  $webclient.DownloadFile($distributionUrl, Join-Path $TMP_DOWNLOAD_DIR $distributionUrlName)
+} catch {
+  Write-Error "Failed to download Maven distribution from $distributionUrl`n$($_.Exception.Message)"
+  exit 1
+}
 
-# If specified, validate the SHA-256 sum of the Maven distribution zip file
-$distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum
+# Validate SHA-256 sum if configured and applicable
+$distributionSha256Sum = $wrapperProperties['distributionSha256Sum']
 if ($distributionSha256Sum) {
   if ($USE_MVND) {
-    Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+    Write-Error "Checksum validation is not supported for maven-mvnd.`nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+    exit 1
   }
-  Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
-  if ((Get-FileHash "$TMP_DOWNLOAD_DIR/$distributionUrlName" -Algorithm SHA256).Hash.ToLower() -ne $distributionSha256Sum) {
-    Write-Error "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised. If you updated your Maven version, you need to update the specified distributionSha256Sum property."
+  Import-Module -Name Microsoft.PowerShell.Utility -ErrorAction SilentlyContinue
+  $computedHash = (Get-FileHash (Join-Path $TMP_DOWNLOAD_DIR $distributionUrlName) -Algorithm SHA256).Hash.ToLower()
+  if ($computedHash -ne $distributionSha256Sum.ToLower()) {
+    Write-Error "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised.`nIf you updated your Maven version, you need to update the specified distributionSha256Sum property."
+    exit 1
   }
 }
 
-# unzip and move
-Expand-Archive "$TMP_DOWNLOAD_DIR/$distributionUrlName" -DestinationPath "$TMP_DOWNLOAD_DIR" | Out-Null
-Rename-Item -Path "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" -NewName $MAVEN_HOME_NAME | Out-Null
+# Extract archive and move to MAVEN_HOME
 try {
-  Move-Item -Path "$TMP_DOWNLOAD_DIR/$MAVEN_HOME_NAME" -Destination $MAVEN_HOME_PARENT | Out-Null
+  Expand-Archive -Path (Join-Path $TMP_DOWNLOAD_DIR $distributionUrlName) -DestinationPath $TMP_DOWNLOAD_DIR -Force
 } catch {
-  if (! (Test-Path -Path "$MAVEN_HOME" -PathType Container)) {
-    Write-Error "fail to move MAVEN_HOME"
+  Write-Error "Failed to extract Maven distribution archive.`n$($_.Exception.Message)"
+  exit 1
+}
+
+$extractedPath = Join-Path $TMP_DOWNLOAD_DIR $distributionUrlNameMain
+$renamedPath = Join-Path $TMP_DOWNLOAD_DIR $MAVEN_HOME_NAME
+
+try {
+  Rename-Item -Path $extractedPath -NewName $MAVEN_HOME_NAME -Force
+} catch {
+  Write-Error "Failed to rename extracted directory.`n$($_.Exception.Message)"
+  exit 1
+}
+
+try {
+  Move-Item -Path $renamedPath -Destination $MAVEN_HOME_PARENT -Force
+} catch {
+  if (-not (Test-Path -Path $MAVEN_HOME -PathType Container)) {
+    Write-Error "Failed to move Maven home directory to $MAVEN_HOME_PARENT"
+    exit 1
   }
 } finally {
-  try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
-  catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+  if (Test-Path $TMP_DOWNLOAD_DIR) {
+    try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force -ErrorAction SilentlyContinue } catch { Write-Warning "Cannot remove temporary directory $TMP_DOWNLOAD_DIR" }
+  }
 }
 
 Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+exit 0
