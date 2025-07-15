@@ -1,2 +1,12 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+# Set line endings for Maven wrapper scripts and related files
+/mvnw        text eol=lf
+/mvnw.cmd    text eol=crlf
+
+# Handle shell scripts commonly found in backend for Unix-like
+*.sh         text eol=lf
+
+# Handle batch scripts for Windows
+*.cmd        text eol=crlf
+
+# Handle .gitattributes itself as text with LF endings
+.gitattributes text eol=lf
