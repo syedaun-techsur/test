@@ -1,10 +1,16 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Ignore Maven target directory
+/target/
 
-### STS ###
+# Include Maven wrapper jar (important for Maven wrapper)
+/.mvn/wrapper/maven-wrapper.jar
+
+# Ignore Maven wrapper scripts and .mvn folder except wrapper jar
+/mvnw
+/mvnw.cmd
+/.mvn/* 
+!/.mvn/wrapper/maven-wrapper.jar
+
+### Spring Tool Suite (STS) ###
 .apt_generated
 .classpath
 .factorypath
@@ -15,19 +21,22 @@ target/
 
 ### IntelliJ IDEA ###
 .idea
-*.iws
 *.iml
-*.ipr
 
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+
+### Build artifacts and logs ###
+*.log
+*.jar
+*.war
+*.ear
+.spring-boot
 
 ### VS Code ###
 .vscode/
+
+HELP.md
