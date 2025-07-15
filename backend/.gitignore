@@ -1,9 +1,10 @@
-HELP.md
+# Ignore Maven target directory
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
+# Ignore Maven wrapper jar file
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE and Tooling ###
 ### STS ###
 .apt_generated
 .classpath
@@ -14,7 +15,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -25,9 +26,14 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Miscellaneous
+HELP.md
