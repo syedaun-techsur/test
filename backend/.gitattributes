@@ -1,2 +1,17 @@
-/mvnw text eol=lf
+# Set line endings for mvnw shell script, treat as text and normalize to LF
+/mvnw text eol=lf filter=crlf
+
+# Windows batch files should use CRLF line endings
 *.cmd text eol=crlf
+
+# Normalize shell scripts to LF
+*.sh text eol=lf
+
+# Normalize markdown files to LF
+*.md text eol=lf
+
+# Treat Maven wrapper .bat files as text with CRLF endings (if any)
+*.bat text eol=crlf
+
+# Ignore build output directory from normalization/filtering
+target/ binary
