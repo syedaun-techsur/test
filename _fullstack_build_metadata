@@ -1,0 +1,8 @@
+{
+  "project_type": "fullstack",
+  "npm_build_status": "ALL BUILDS SUCCESSFUL",
+  "maven_build_status": "ALL MAVEN BUILDS SUCCESSFUL",
+  "springboot_server_status": "ALL SERVERS STARTED",
+  "overall_status": "npm: ALL BUILDS SUCCESSFUL, Maven: ALL MAVEN BUILDS SUCCESSFUL, Spring Boot: ALL SERVERS STARTED",
+  "timestamp": "fullstack_processing_completed"
+}
