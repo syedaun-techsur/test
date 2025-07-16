@@ -3,7 +3,6 @@ package solutions.techsur.rfpaiservice.service.impl;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,7 +42,7 @@ public class ComplianceMatrixServiceImpl implements ComplianceMatrixService {
         List<ComplianceMatrix> matrices = new ArrayList<>();
         for (ComplianceMatrixRequest matrixRequest : request) {
             ComplianceMatrix matrix = ComplianceMatrix.builder().build();
-            matrix.setProposal(findProposalById(proposalId));
+            matrix.setProposal(proposal);
             BeanUtils.copyProperties(matrixRequest, matrix);
             matrices.add(matrix);
         }
@@ -58,7 +57,7 @@ public class ComplianceMatrixServiceImpl implements ComplianceMatrixService {
     @Override
     public Page<ComplianceMatrix> getComplianceMatrixPage(CommonFilter filter, Pageable pageable, Integer proposalId) {
         Specification<ComplianceMatrix> specification = proposalSpecification(proposalId);
-        if (StringUtils.isNoneBlank(filter.getSearch())) {
+        if (StringUtils.isNotBlank(filter.getSearch())) {
             specification = specification.and(multiFieldSearch(filter));
         }
         return repository.findAll(specification, pageable);
@@ -71,14 +70,14 @@ public class ComplianceMatrixServiceImpl implements ComplianceMatrixService {
             proposal.getComplianceMatrices().clear();
         }
         List<ComplianceMatrix> matrices = new ArrayList<>();
-        request.forEach(complianceMatrixRequest -> {
+        for (ComplianceMatrixRequest complianceMatrixRequest : request) {
             ComplianceMatrix matrix = ComplianceMatrix.builder().build();
-            if (Strings.isNotEmpty(complianceMatrixRequest.getRequirement())) {
+            if (StringUtils.isNotBlank(complianceMatrixRequest.getRequirement())) {
                 matrix.setRequirement(complianceMatrixRequest.getRequirement());
             }
             matrix.setStatus(complianceMatrixRequest.getStatus());
 
-            if (Strings.isNotEmpty(complianceMatrixRequest.getJustification())) {
+            if (StringUtils.isNotBlank(complianceMatrixRequest.getJustification())) {
                 matrix.setJustification(complianceMatrixRequest.getJustification());
             }
 
@@ -87,7 +86,7 @@ public class ComplianceMatrixServiceImpl implements ComplianceMatrixService {
             }
             matrix.setProposal(proposal);
             matrices.add(matrix);
-        });
+        }
         repository.saveAll(matrices);
     }
 
