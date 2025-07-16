@@ -9,16 +9,17 @@ import solutions.techsur.rfpaiservice.entity.ResponseOutline;
 public class ResponseOutlineSpecification {
 
     public static Specification<ResponseOutline> proposalSpecification(Integer proposalId) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("proposals").get("id"), proposalId);
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("proposal").get("id"), proposalId);
     }
 
     public static Specification<ResponseOutline> parentSectionSpecification(Integer proposalId) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.and(criteriaBuilder.equal(root.get("proposal").get("id"), proposalId), criteriaBuilder.isNull(root.get("parentSection")));
-        };
+        return (root, query, criteriaBuilder) -> criteriaBuilder.and(
+                criteriaBuilder.equal(root.get("proposal").get("id"), proposalId),
+                criteriaBuilder.isNull(root.get("parentSection"))
+        );
     }
 
-    public static Specification<ResponseOutline> childSpecification(ResponseOutline parent){
+    public static Specification<ResponseOutline> childSpecification(ResponseOutline parent) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("parentSection"), parent);
     }
 }
