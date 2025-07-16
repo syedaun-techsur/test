@@ -3,18 +3,26 @@ FROM gradle:jdk21 AS builder
 WORKDIR /app
 
 COPY gradlew .
-COPY gradle gradle
+COPY gradle ./gradle
 COPY build.gradle .
 COPY settings.gradle .
-COPY src src
+COPY src ./src
 
-# Build the application without running tests and without starting the daemon
 RUN chmod +x ./gradlew && ./gradlew build --no-daemon -x test
 
 FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-COPY --from=builder /app/build/libs/*.jar /app/
+# Copy the application jar built by the Gradle build stage
+COPY --from=builder /app/build/libs/*.jar ./
 
-CMD ["java", "-jar", "/app/rfpai-service-plain.jar"]
+# Use non-root user for security best practice
+RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
+USER appuser
+
+LABEL maintainer="solutions.techsur"
+LABEL description="RFP AI Service"
+
+ENTRYPOINT ["java", "-jar"]
+CMD ["rfpai-service-plain.jar"]
