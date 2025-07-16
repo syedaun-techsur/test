@@ -9,12 +9,13 @@ public interface Reason extends Serializable {
     String getMessage();
 
     default String getMessage(String... messageParam) {
-        return messageParam == null || messageParam.length == 0 ? getMessage() : String.format(getMessage(), messageParam);
+        return messageParam == null || messageParam.length == 0 ? getMessage() : String.format(getMessage(), (Object[]) messageParam);
     }
 
     HttpStatus getStatus();
 
     int getErrorCode();
 
+    @Override
     String name();
 }
