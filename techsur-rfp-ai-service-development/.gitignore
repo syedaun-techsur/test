@@ -1,4 +1,17 @@
-build
-.gradle
-.idea
-run
+# Ignore build output directory
+/build/
+
+# Ignore Gradle cache and wrapper files
+/.gradle/
+/gradle/
+
+# Ignore IntelliJ IDEA project files
+/.idea/
+/*.iml
+
+# Ignore run files
+/run/
+
+# Ignore logs and temporary files
+*.log
+*.tmp
