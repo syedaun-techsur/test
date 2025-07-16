@@ -1,2 +1,39 @@
+# Shell wrapper script for Maven wrapper - always use LF line endings
 /mvnw text eol=lf
+/mvnw.cmd text eol=crlf
+
+# Windows batch scripts - use CRLF line endings
 *.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Shell scripts - enforce LF line endings
+*.sh text eol=lf
+
+# Java source files - use normalized text attribute with LF endings
+*.java text eol=lf
+
+# Maven POM files, XML config files - treat as text with LF endings
+*.xml text eol=lf
+
+# Properties files - treat as text, LF endings
+*.properties text eol=lf
+
+# Binary files - mark as binary to avoid line ending conversions:
+*.jar binary
+*.war binary
+*.ear binary
+*.zip binary
+*.tar.gz binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+
+# Lock files
+*.lock binary
+
+# IDE metadata and other project specific files (optional, add if applicable)
+# .idea/ binary
+# *.iml binary
+
+# Node modules and frontend build artifacts are outside backend, so no rules here
