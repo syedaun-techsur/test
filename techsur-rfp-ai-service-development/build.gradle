@@ -1,95 +1,59 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.6'
+    id 'org.springframework.boot' version '3.2.0'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'jacoco'
+    id 'io.freefair.lombok' version '8.14'
 }
 
-group = 'solutions.techsur'
+group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
+sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web' // for servlet API and web support
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
+    implementation 'org.hibernate:hibernate-envers:6.0.0.Final'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+
+    implementation 'org.modelmapper:modelmapper:3.1.1'
+    implementation 'org.jsoup:jsoup:1.16.1'
+
+    implementation 'software.amazon.awssdk:s3:2.20.67'
+    implementation 'software.amazon.awssdk:auth:2.20.67'
+    implementation 'software.amazon.awssdk:regions:2.20.67'
+    implementation 'software.amazon.awssdk:core:2.20.67'
+
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.security:spring-security-oauth2-resource-server'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
-    implementation 'org.springframework.data:spring-data-envers'
-    implementation 'org.liquibase:liquibase-core'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'org.mapstruct:mapstruct:1.6.3'
-    implementation 'org.springframework.boot:spring-boot-starter-hateoas:3.3.5'
-    implementation 'software.amazon.awssdk:s3:2.29.37'
-    implementation 'com.itextpdf:itext7-core:7.2.2'
-    implementation 'com.itextpdf:kernel:7.0.2'
-    implementation 'com.itextpdf:io:7.0.2'
-    implementation 'com.itextpdf:layout:7.0.2'
-    implementation 'com.itextpdf:forms:7.0.2'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.keycloak:keycloak-spring-boot-starter:25.0.3'
-    implementation 'org.keycloak:keycloak-admin-client:25.0.3'
-    implementation 'org.modelmapper:modelmapper:3.2.0'
-    implementation 'org.apache.poi:poi-ooxml:5.2.3'
-    implementation 'org.jsoup:jsoup:1.17.2'
 
-    annotationProcessor 'org.projectlombok:lombok'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    implementation 'org.keycloak:keycloak-admin-client:21.0.1'
+
+    implementation 'org.liquibase:liquibase-core:4.23.2'
+
     compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'io.projectreactor:reactor-test'
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.springframework.amqp:spring-rabbit-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.hamcrest:hamcrest:3.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
-
-jacocoTestReport {
-    dependsOn test
-
-    reports {
-        xml.required.set(true) // Modern Gradle
-        html.required.set(true)
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.2.0'
     }
-}
-
-tasks.test {
-    finalizedBy jacocoTestReport
-}
-
-jar {
-    enabled = false
-    archiveFileName.set("rfpai-service.jar")
-}
-
-bootJar {
-    archiveFileName.set("rfpai-service-plain.jar")
 }
