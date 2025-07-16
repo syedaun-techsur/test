@@ -4,17 +4,19 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
-import org.springframework.data.repository.NoRepositoryBean;
-import solutions.techsur.rfpaiservice.entity.RequestForProposalDocument;
-
+import lombok.Singular;
 import java.util.List;
+import solutions.techsur.rfpaiservice.entity.RequestForProposalDocument;
 
 @Setter
 @Getter
-@SuperBuilder
+@Builder
 @NoArgsConstructor
-public class ProposalDocumentResponse {
-    List<RequestForProposalDocument> uploadedDocument;
-    List<RequestForProposalDocument> blueBookDocument;
+public final class ProposalDocumentResponse {
+
+    @Singular
+    private final List<RequestForProposalDocument> uploadedDocument;
+
+    @Singular
+    private final List<RequestForProposalDocument> blueBookDocument;
 }
