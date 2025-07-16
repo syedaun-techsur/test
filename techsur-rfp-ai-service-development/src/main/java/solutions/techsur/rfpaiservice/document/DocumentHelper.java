@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -60,37 +61,75 @@ public class DocumentHelper {
                 .build();
     }
 
+    /**
+     * Constructs the file path for storing documents, with folders structured by proposal ID and timestamp.
+     * @param isBlueBook Whether to use the blue book base folder or not.
+     * @param fileName The name of the file.
+     * @param proposalId The proposal ID.
+     * @return The constructed file path.
+     */
     public String getFilePath(boolean isBlueBook, String fileName, Integer proposalId) {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String postFix = "/" + proposalId + "_" + timestamp + "/" + fileName;
-        return isBlueBook ? blueBookBaseFolder.concat(postFix) : baseFolder.concat(postFix);
+        String postfix = "/" + proposalId + "_" + timestamp + "/" + fileName;
+        return isBlueBook ? blueBookBaseFolder.concat(postfix) : baseFolder.concat(postfix);
     }
 
+    /**
+     * Constructs the file path for an admin blue book document.
+     * @param fileName Name of the file.
+     * @return The constructed admin blue book file path.
+     */
     public String getFilePathForAdminBlueBook(String fileName) {
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String postFix = "/" + timestamp + "/" + fileName;
+        String postfix = "/" + timestamp + "/" + fileName;
         String adminBasePath = blueBookBaseFolder + "/admin";
-        return adminBasePath.concat(postFix);
+        return adminBasePath.concat(postfix);
     }
 
+    /**
+     * Uploads the given file to S3 under the specified file key.
+     * @param file Multipart file to upload.
+     * @param fileKey The S3 key under which to store the file.
+     * @throws IOException If reading the file bytes fails.
+     */
     public void uploadRFPDocument(MultipartFile file, String fileKey) throws IOException {
-        getS3Client().putObject(PutObjectRequest.builder()
-                .bucket(stBucketName)
-                .key(fileKey)
-                .build(), RequestBody.fromBytes(file.getBytes()));
+        try {
+            getS3Client().putObject(PutObjectRequest.builder()
+                    .bucket(stBucketName)
+                    .key(fileKey)
+                    .build(), RequestBody.fromBytes(file.getBytes()));
+        } catch (Exception e) {
+            log.error(String.format("Failed to upload document to S3 with key %s: %s", fileKey, e.getMessage()), e);
+            throw e;
+        }
     }
 
+    /**
+     * Deletes the document in S3 with the given file key.
+     * @param fileKey The S3 key of the file to delete.
+     */
     public void deleteRFPDocument(String fileKey) {
-        getS3Client().deleteObject(DeleteObjectRequest
-                .builder()
-                .bucket(stBucketName)
-                .key(fileKey).build());
+        try {
+            getS3Client().deleteObject(DeleteObjectRequest
+                    .builder()
+                    .bucket(stBucketName)
+                    .key(fileKey).build());
+        } catch (Exception e) {
+            log.error(String.format("Failed to delete document from S3 with key %s: %s", fileKey, e.getMessage()), e);
+        }
     }
 
+    /**
+     * Creates an XWPFDocument based on the outline response, populating sections and subsections.
+     * @param outlineResponse The outline response containing title and sections.
+     * @return Created XWPFDocument.
+     */
     public XWPFDocument createDocument(OutlineResponse outlineResponse) {
         XWPFDocument document = new XWPFDocument();
         addTitle(document, outlineResponse.getOutlineTitle());
-        outlineResponse.getSections().forEach(section -> addSection(document, section));
+        if (outlineResponse.getSections() != null) {
+            outlineResponse.getSections().forEach(this::addSection);
+        }
         return document;
     }
 
@@ -98,7 +137,7 @@ public class DocumentHelper {
         XWPFParagraph title = document.createParagraph();
         title.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun titleRun = title.createRun();
-        titleRun.setText(titleText);
+        titleRun.setText(titleText != null ? titleText : "");
         titleRun.setBold(true);
         titleRun.setFontSize(16);
     }
@@ -107,11 +146,14 @@ public class DocumentHelper {
         XWPFParagraph sectionTitle = document.createParagraph();
         sectionTitle.setSpacingBefore(200);
         XWPFRun sectionRun = sectionTitle.createRun();
-        sectionRun.setText(section.getSectionNumber() + ". " + section.getSectionTitle());
+        String sectionTitleText = section.getSectionNumber() + ". " + (section.getSectionTitle() != null ? section.getSectionTitle() : "");
+        sectionRun.setText(sectionTitleText);
         sectionRun.setBold(true);
         sectionRun.setFontSize(14);
 
-        section.getSubsections().forEach(subsection -> addSubsection(document, subsection, 1));
+        if (section.getSubsections() != null) {
+            section.getSubsections().forEach(subsection -> addSubsection(document, subsection, 1));
+        }
     }
 
     private void addSubsection(XWPFDocument document, SubSectionResponse subsection, int level) {
@@ -119,11 +161,12 @@ public class DocumentHelper {
         int indentationStep = 400;
         int currentIndentation = baseIndentation + (level * indentationStep);
 
-        addTextParagraph(document, subsection.getSubSectionNumber() + " " + subsection.getSubSectionTitle(), currentIndentation / 2, 12, true);
-        addTextParagraph(document, subsection.getRequirement(), currentIndentation, 11, false);
-        addTextParagraph(document, subsection.getContext(), currentIndentation, 11, false);
+        String subSectionTitle = (subsection.getSubSectionNumber() != null ? subsection.getSubSectionNumber() : "") + " " +
+                (subsection.getSubSectionTitle() != null ? subsection.getSubSectionTitle() : "");
+        addTextParagraph(document, subSectionTitle.trim(), currentIndentation / 2, 12, true);
+        addTextParagraph(document, subsection.getRequirement() != null ? subsection.getRequirement() : "", currentIndentation, 11, false);
+        addTextParagraph(document, subsection.getContext() != null ? subsection.getContext() : "", currentIndentation, 11, false);
 
-        // Recursively process nested subsections with increased level
         if (subsection.getSubsections() != null) {
             subsection.getSubsections().forEach(sub -> addSubsection(document, sub, level + 1));
         }
@@ -133,6 +176,10 @@ public class DocumentHelper {
         XWPFParagraph paragraph = document.createParagraph();
         paragraph.setIndentationLeft(indentationLeft);
 
+        if (htmlText == null || htmlText.trim().isEmpty()) {
+            return; // Avoid creating empty paragraphs unnecessarily
+        }
+
         Document parsedHtml = Jsoup.parse(htmlText);
         Element body = parsedHtml.body();
 
@@ -140,14 +187,17 @@ public class DocumentHelper {
     }
 
     private void processHtmlElements(List<Node> nodes, XWPFParagraph paragraph, int fontSize, boolean parentBold) {
+        if (nodes == null) {
+            return;
+        }
         for (Node node : nodes) {
             if (node instanceof TextNode) {
                 addFormattedText(paragraph, ((TextNode) node).text(), fontSize, parentBold, false, null);
             } else if (node instanceof Element) {
                 Element element = (Element) node;
-                boolean isBold = parentBold || element.tagName().equals("b") || element.tagName().equals("strong");
-                boolean isItalic = element.tagName().equals("i") || element.tagName().equals("em");
-                boolean isLink = element.tagName().equals("a");
+                boolean isBold = parentBold || element.tagName().equalsIgnoreCase("b") || element.tagName().equalsIgnoreCase("strong");
+                boolean isItalic = element.tagName().equalsIgnoreCase("i") || element.tagName().equalsIgnoreCase("em");
+                boolean isLink = element.tagName().equalsIgnoreCase("a");
 
                 String linkHref = isLink ? element.attr("href") : null;
                 processChildElements(element, paragraph, fontSize, isBold, isItalic, linkHref);
@@ -156,14 +206,17 @@ public class DocumentHelper {
     }
 
     private void processChildElements(Element element, XWPFParagraph paragraph, int fontSize, boolean parentBold, boolean parentItalic, String linkHref) {
+        if (element == null) {
+            return;
+        }
         for (Node child : element.childNodes()) {
             if (child instanceof TextNode) {
                 addFormattedText(paragraph, ((TextNode) child).text(), fontSize, parentBold, parentItalic, linkHref);
             } else if (child instanceof Element) {
                 Element childElement = (Element) child;
-                boolean isBold = parentBold || childElement.tagName().equals("b") || childElement.tagName().equals("strong");
-                boolean isItalic = parentItalic || childElement.tagName().equals("i") || childElement.tagName().equals("em");
-                boolean isLink = childElement.tagName().equals("a");
+                boolean isBold = parentBold || childElement.tagName().equalsIgnoreCase("b") || childElement.tagName().equalsIgnoreCase("strong");
+                boolean isItalic = parentItalic || childElement.tagName().equalsIgnoreCase("i") || childElement.tagName().equalsIgnoreCase("em");
+                boolean isLink = childElement.tagName().equalsIgnoreCase("a");
 
                 String childLinkHref = isLink ? childElement.attr("href") : linkHref;
                 processChildElements(childElement, paragraph, fontSize, isBold, isItalic, childLinkHref);
@@ -172,38 +225,45 @@ public class DocumentHelper {
     }
 
     private void addFormattedText(XWPFParagraph paragraph, String text, int fontSize, boolean bold, boolean italic, String hyperlink) {
-        if (!text.trim().isEmpty()) {
-            if (hyperlink != null) {
-                XWPFHyperlinkRun linkRun = paragraph.createHyperlinkRun(hyperlink);
-                linkRun.setText(text);
-                linkRun.setFontSize(fontSize);
-                linkRun.setBold(bold);
-                linkRun.setItalic(italic);
-                linkRun.setColor("0000FF");
-                linkRun.setUnderline(UnderlinePatterns.SINGLE);
-            } else {
-                XWPFRun run = paragraph.createRun();
-                run.setText(text);
-                run.setFontSize(fontSize);
-                run.setBold(bold);
-                run.setItalic(italic);
-            }
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        if (hyperlink != null && !hyperlink.trim().isEmpty()) {
+            XWPFHyperlinkRun linkRun = paragraph.createHyperlinkRun(hyperlink);
+            linkRun.setText(text);
+            linkRun.setFontSize(fontSize);
+            linkRun.setBold(bold);
+            linkRun.setItalic(italic);
+            linkRun.setColor("0000FF");
+            linkRun.setUnderline(UnderlinePatterns.SINGLE);
+        } else {
+            XWPFRun run = paragraph.createRun();
+            run.setText(text);
+            run.setFontSize(fontSize);
+            run.setBold(bold);
+            run.setItalic(italic);
         }
     }
 
+    /**
+     * Deletes all files in S3 folder corresponding to the given solicitation ID.
+     * @param solicitationId The solicitation ID folder to clean.
+     */
     public void deleteFilesInFolder(String solicitationId) {
         String folderPrefix = baseFolder + "/" + solicitationId + "/";
+        S3Client s3Client = getS3Client();
 
         ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
                 .bucket(stBucketName)
                 .prefix(folderPrefix)
                 .build();
-        S3Client s3Client = getS3Client();
+
         ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
 
-        List<ObjectIdentifier> objectsToDelete = listResponse.contents().stream()
-                .map(s3Object -> ObjectIdentifier.builder().key(s3Object.key()).build())
-                .toList();
+        List<ObjectIdentifier> objectsToDelete = listResponse.contents() == null ? List.of() :
+                listResponse.contents().stream()
+                        .map(s3Object -> ObjectIdentifier.builder().key(s3Object.key()).build())
+                        .collect(Collectors.toList());
 
         if (!objectsToDelete.isEmpty()) {
             DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
@@ -212,14 +272,21 @@ public class DocumentHelper {
                     .build();
 
             s3Client.deleteObjects(deleteRequest);
-            log.info("Cleaned folder: " + folderPrefix);
+            log.info("Cleaned folder: {}", folderPrefix);
         } else {
-            log.info("Folder already empty: " + folderPrefix);
+            log.info("Folder already empty: {}", folderPrefix);
         }
     }
 
+    /**
+     * Copies specific documents inside S3 from source keys to the target solicitation folder.
+     * @param fileNameAndPath Map with fileName (destination) as key and source path (sourceKey) as value.
+     * @param solicitationId The solicitation ID used to build destination folder path.
+     */
     public void copySpecificDocuments(Map<String, String> fileNameAndPath, String solicitationId) {
         String folderPrefix = baseFolder + "/" + solicitationId + "/";
+        S3Client s3Client = getS3Client();
+
         for (Map.Entry<String, String> entry : fileNameAndPath.entrySet()) {
             String targetKey = folderPrefix + entry.getKey();
             String sourceKey = entry.getValue();
@@ -230,14 +297,19 @@ public class DocumentHelper {
                     .destinationKey(targetKey)
                     .build();
             try {
-                getS3Client().copyObject(copyRequest);
-                log.info("Copied: " + sourceKey + " -> " + targetKey);
+                s3Client.copyObject(copyRequest);
+                log.info("Copied: {} -> {}", sourceKey, targetKey);
             } catch (S3Exception e) {
-                log.warn("Failed to copy: " + sourceKey + " - " + e.getMessage());
+                log.warn("Failed to copy: {} - {}", sourceKey, e.getMessage());
             }
         }
     }
 
+    /**
+     * Retrieves the document from S3 with the given file key.
+     * @param fileKey The key of the file in S3 to retrieve.
+     * @return ResponseInputStream with the document content.
+     */
     public ResponseInputStream<GetObjectResponse> getDocumentFromS3(String fileKey) {
         try {
             return getS3Client().getObject(GetObjectRequest.builder()
