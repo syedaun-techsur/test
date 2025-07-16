@@ -29,13 +29,17 @@ public class RequestForProposal extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "title")
+
+    @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "description")
     private String description;
-    @Column(name = "dead_line", nullable = false)
+
+    @Column(name = "deadline", nullable = false)
     private LocalDate deadline;
 
-    @Enumerated(EnumType.STRING)  // Store enum as String
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private Status status = Status.UPLOADED;
@@ -53,6 +57,7 @@ public class RequestForProposal extends BaseEntity {
     private List<ResponseOutline> responseOutlines = new ArrayList<>();
 
     @OneToMany(mappedBy = "proposal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     @JsonManagedReference
     private List<ComplianceMatrix> complianceMatrices = new ArrayList<>();
 
@@ -68,12 +73,12 @@ public class RequestForProposal extends BaseEntity {
             this.dbValue = dbValue;
         }
 
-        @JsonValue  // Store string representation in JSON responses
+        @JsonValue
         public String getDbValue() {
             return dbValue;
         }
 
-        @JsonCreator  // Convert string back to Enum when reading JSON
+        @JsonCreator
         public static Status fromDbValue(String dbValue) {
             for (Status status : values()) {
                 if (status.dbValue.equalsIgnoreCase(dbValue)) {
