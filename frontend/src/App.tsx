@@ -1,7 +1,8 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchHello } from './api';
 
-function App() {
+const App: React.FC = () => {
   const { data, error, isLoading } = useQuery({
     queryKey: ['hello'],
     queryFn: fetchHello,
@@ -14,12 +15,12 @@ function App() {
         Backend says:{' '}
         {isLoading
           ? 'Loading...'
-          : error
-          ? `Error: ${(error as Error).message}`
+          : error instanceof Error
+          ? `Error: ${error.message}`
           : data?.message}
       </p>
     </div>
   );
-}
+};
 
 export default App;
