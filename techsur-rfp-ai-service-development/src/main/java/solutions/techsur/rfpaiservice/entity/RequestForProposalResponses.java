@@ -1,6 +1,5 @@
 package solutions.techsur.rfpaiservice.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,30 +7,37 @@ import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import solutions.techsur.common.microservice.entity.BaseEntity;
 
-@Table(name = "rfp_responses")
+/**
+ * Entity representing a response to a Request For Proposal.
+ */
 @Entity
-@EqualsAndHashCode(callSuper = true, exclude = {"outline", "proposal"})
+@Table(name = "rfp_responses")
+@Audited
+@AuditTable(value = "rfp_responses_aud")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Getter
-@Setter
-@Audited
-@AuditTable(value = "rfp_responses_aud")
+@EqualsAndHashCode(callSuper = true, exclude = {"outline", "proposal"})
 @ToString(callSuper = true, exclude = {"outline", "proposal"})
-public class RequestForProposalResponses extends BaseEntity {
+public class RequestForProposalResponse extends BaseEntity {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private int id;
 
+    @NonNull
     @Column(name = "generated_text", nullable = false)
     private String generatedText;
 
+    @NonNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private ResponsesStatus status = ResponsesStatus.GENERATED;
+    private ResponseStatus status = ResponseStatus.GENERATED;
 
     @ManyToOne
     @JoinColumn(name = "rfp_id", referencedColumnName = "id")
@@ -41,19 +47,21 @@ public class RequestForProposalResponses extends BaseEntity {
     @JoinColumn(name = "outline_id", referencedColumnName = "id")
     private ResponseOutline outline;
 
-
-    public enum ResponsesStatus {
+    /**
+     * Status of the response.
+     */
+    public enum ResponseStatus {
         GENERATED("Generated"),
         REVIEWED("Reviewed"),
         FINALIZED("Finalized");
 
         private final String value;
 
-        ResponsesStatus(String value) {
+        ResponseStatus(String value) {
             this.value = value;
         }
 
-        @JsonValue  // Ensures this value is used in JSON responses
+        @JsonValue
         public String getValue() {
             return value;
         }
