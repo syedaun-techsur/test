@@ -14,6 +14,8 @@ import solutions.techsur.rfpaiservice.repository.RequestForProposalResponsesRepo
 import solutions.techsur.rfpaiservice.repository.ResponseOutlineRepository;
 import solutions.techsur.rfpaiservice.service.RequestForProposalResponsesService;
 
+import java.util.Objects;
+
 import static solutions.techsur.common.microservice.exceptions.AppReason.*;
 
 @Service
@@ -22,17 +24,13 @@ import static solutions.techsur.common.microservice.exceptions.AppReason.*;
 public class RequestForProposalResponsesServiceImpl implements RequestForProposalResponsesService {
 
     private final RequestForProposalResponsesRepository repository;
-
     private final RequestForProposalRepository proposalRepository;
-
     private final ResponseOutlineRepository outlineRepository;
-
 
     @Override
     public RequestForProposalResponses createResponses(ResponsesRequest request) {
-        RequestForProposalResponses responses = RequestForProposalResponses.builder().build();
+        RequestForProposalResponses responses = new RequestForProposalResponses();
         mapProposalAndOutline(request, responses);
-
         BeanUtils.copyProperties(request, responses);
         return repository.save(responses);
     }
@@ -41,10 +39,12 @@ public class RequestForProposalResponsesServiceImpl implements RequestForProposa
     public void updateResponses(ResponsesRequest request, Integer responsesId) {
         RequestForProposalResponses responses = findResponsesById(responsesId);
         mapProposalAndOutline(request, responses);
-        if (request.getGeneratedText() != null) {
+
+        if (Objects.nonNull(request.getGeneratedText())) {
             responses.setGeneratedText(request.getGeneratedText());
         }
-        if (request.getStatus() != RequestForProposalResponses.ResponsesStatus.GENERATED) {
+
+        if (request.getStatus() != null && request.getStatus() != RequestForProposalResponses.ResponsesStatus.GENERATED) {
             responses.setStatus(request.getStatus());
         }
         repository.save(responses);
@@ -56,11 +56,11 @@ public class RequestForProposalResponsesServiceImpl implements RequestForProposa
     }
 
     // private method region start.
-     private RequestForProposal findProposalById(Integer id){
+    private RequestForProposal findProposalById(Integer id) {
         return proposalRepository.findById(id).orElseThrow(() -> new AppException(RFP_NOT_FOUND));
-     }
+    }
 
-    private ResponseOutline findOutlineById(Integer id){
+    private ResponseOutline findOutlineById(Integer id) {
         return outlineRepository.findById(id).orElseThrow(() -> new AppException(RESPONSE_OUTLINE_NOT_FOUND));
     }
 
@@ -68,15 +68,14 @@ public class RequestForProposalResponsesServiceImpl implements RequestForProposa
         return repository.findById(id).orElseThrow(() -> new AppException(RESPONSES_NOT_FOUND));
     }
 
-
     private void mapProposalAndOutline(ResponsesRequest request, RequestForProposalResponses responses) {
-        if (request.getProposalId() != null) {
+        if (Objects.nonNull(request.getProposalId())) {
             responses.setProposal(findProposalById(request.getProposalId()));
         }
 
-        if (request.getOutlineId() != null) {
+        if (Objects.nonNull(request.getOutlineId())) {
             responses.setOutline(findOutlineById(request.getOutlineId()));
         }
     }
-    //private method region end.
+    // private method region end.
 }
