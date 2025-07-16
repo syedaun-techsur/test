@@ -1,4 +1,49 @@
-build
-.gradle
-.idea
-run
+# Gradle build directory
+/build/
+
+# Gradle wrapper files
+/gradle/
+/gradlew
+/gradlew.bat
+
+# Eclipse IDE files
+/.classpath
+/.project
+/.settings/
+
+# IntelliJ IDEA files
+/.idea/
+/*.iml
+
+# VS Code files
+/.vscode/
+
+# OS files
+.DS_Store
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Output folders
+/out/
+
+# Java class files
+*.class
+
+# Generated jars and archives
+*.jar
+*.war
+
+# Spring Boot specific
+!/src/main/resources/static/
+!/src/main/resources/public/
+
+# Maven files
+/.mvn/
+
+# Run scripts or dirs
+/run/
