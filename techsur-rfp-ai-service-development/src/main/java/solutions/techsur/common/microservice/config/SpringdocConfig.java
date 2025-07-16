@@ -6,7 +6,19 @@ import io.swagger.v3.oas.annotations.security.OAuthFlows;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration for OpenAPI security schemes using Springdoc.
+ */
 @Configuration
-@SecurityScheme(name = "bearerToken", type = SecuritySchemeType.OAUTH2, flows = @OAuthFlows(password = @OAuthFlow(authorizationUrl = "${springdoc.oAuthFlow.authorizationUrl}", tokenUrl = "${springdoc.oAuthFlow.tokenUrl}")))
+@SecurityScheme(
+    name = "bearerToken",
+    type = SecuritySchemeType.OAUTH2,
+    flows = @OAuthFlows(
+        password = @OAuthFlow(
+            authorizationUrl = "${springdoc.oAuthFlow.authorizationUrl}",
+            tokenUrl = "${springdoc.oAuthFlow.tokenUrl}"
+        )
+    )
+)
 public class SpringdocConfig {
 }
