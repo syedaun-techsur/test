@@ -1,8 +1,9 @@
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+
+# Ignore Maven target folders in source sets
+**/target/
 
 ### STS ###
 .apt_generated
@@ -25,13 +26,16 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
+
+# Gradle build folders (if present)
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
 
 ### OS ###
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Maven wrapper files (.mvn folder except wrapper jar handled above)
+.mvn/
