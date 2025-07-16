@@ -21,7 +21,7 @@
 @rem
 @rem ##########################################################################
 
-@rem Set local scope for the variables with windows NT shell
+@rem Set local scope for the variables with Windows NT shell
 if "%OS%"=="Windows_NT" setlocal
 
 set DIRNAME=%~dp0
@@ -40,7 +40,7 @@ if defined JAVA_HOME goto findJavaFromJavaHome
 
 set JAVA_EXE=java.exe
 %JAVA_EXE% -version >NUL 2>&1
-if %ERRORLEVEL% equ 0 goto execute
+if "%ERRORLEVEL%"=="0" goto execute
 
 echo.
 echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
@@ -51,8 +51,8 @@ echo location of your Java installation.
 goto fail
 
 :findJavaFromJavaHome
-set JAVA_HOME=%JAVA_HOME:"=%
-set JAVA_EXE=%JAVA_HOME%/bin/java.exe
+set "JAVA_HOME=%JAVA_HOME:"=%"
+set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
 
 if exist "%JAVA_EXE%" goto execute
 
@@ -69,21 +69,20 @@ goto fail
 
 set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
 
-
 @rem Execute Gradle
 "%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
 
 :end
-@rem End local scope for the variables with windows NT shell
-if %ERRORLEVEL% equ 0 goto mainEnd
+@rem End local scope for the variables with Windows NT shell
+if "%OS%"=="Windows_NT" endlocal
+
+if "%ERRORLEVEL%"=="0" goto mainEnd
 
 :fail
-rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
-rem the _cmd_ return code when the batch file is called from a command line.
+@rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+@rem the _cmd_ return code when the batch file is called from a command line.
 if not "" == "%GRADLE_EXIT_CONSOLE%" exit 1
 exit /b 1
 
 :mainEnd
-if "%OS%"=="Windows_NT" endlocal
-
-:omega 
+exit /b 0
