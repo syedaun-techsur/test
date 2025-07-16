@@ -48,22 +48,23 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
     private static final int maxDepth = 4;
 
     @Override
-    public RequestForProposal createRequestForProposal(ProposalRequest request) {
-        RequestForProposal proposal = RequestForProposal.builder().build();
+    public RequestForProposal createRequestForProposal(final ProposalRequest request) {
+        final RequestForProposal proposal = RequestForProposal.builder().build();
         BeanUtils.copyProperties(request, proposal);
         return repository.save(proposal);
     }
 
     @Override
-    public Page<RequestForProposal> getProposals(ProposalFilter filter, Pageable pageable) {
-        Specification specification = alwaysTrue();
+    public Page<RequestForProposal> getProposals(final ProposalFilter filter, final Pageable pageable) {
+        Specification<RequestForProposal> specification = alwaysTrue();
+
         if (filter.isArchived()) {
             specification = specification.and(isEqualTo(true, "isArchived"));
         } else {
             specification = specification.and(isEqualTo(false, "isArchived"));
         }
 
-        if (StringUtils.isNoneBlank(filter.getSearch())) {
+        if (StringUtils.isNotBlank(filter.getSearch())) {
             specification = specification.and(multiFieldSearch(filter));
         }
 
@@ -71,21 +72,21 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
     }
 
     @Override
-    public RequestForProposal createResponseOutline(OutlineResponse request, Integer proposalId) {
-        RequestForProposal proposal = findProposalById(proposalId);
+    public RequestForProposal createResponseOutline(final OutlineResponse request, final Integer proposalId) {
+        final RequestForProposal proposal = findProposalById(proposalId);
 
         // Clear outline if it has previous generated outline.
         if (proposal.getResponseOutlines() != null) {
             proposal.getResponseOutlines().clear();
         }
 
-        List<ResponseOutline> outlines = new ArrayList<>();
+        final List<ResponseOutline> outlines = new ArrayList<>();
         if (request.getSections() != null) {
-            List<SectionResponse> sectionResponses = request.getSections();
+            final List<SectionResponse> sectionResponses = request.getSections();
 
-            for (SectionResponse sectionResponse : sectionResponses) {
-                List<ResponseOutline> responseSubsections = new ArrayList<>();
-                ResponseOutline responseOutline = ResponseOutline.builder()
+            for (final SectionResponse sectionResponse : sectionResponses) {
+                final List<ResponseOutline> responseSubsections = new ArrayList<>();
+                final ResponseOutline responseOutline = ResponseOutline.builder()
                         .proposal(proposal)
                         .sectionNo(sectionResponse.getSectionNumber())
                         .sectionTitle(sectionResponse.getSectionTitle())
@@ -109,10 +110,9 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         return proposal;
     }
 
-    private List<ResponseOutline> processSubsections(List<SubSectionResponse> subSections, RequestForProposal proposal, List<ResponseOutline> responseSubsections, ResponseOutline parentOutline) {
-
-        for (SubSectionResponse subSectionResponse : subSections) {
-            ResponseOutline subSectionOutline = ResponseOutline.builder()
+    private List<ResponseOutline> processSubsections(final List<SubSectionResponse> subSections, final RequestForProposal proposal, final List<ResponseOutline> responseSubsections, final ResponseOutline parentOutline) {
+        for (final SubSectionResponse subSectionResponse : subSections) {
+            final ResponseOutline subSectionOutline = ResponseOutline.builder()
                     .proposal(proposal)
                     .parentSection(parentOutline)
                     .sectionNo(subSectionResponse.getSubSectionNumber())
@@ -135,59 +135,64 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         return responseSubsections;
     }
 
-
     @Override
-    public OutlineResponse getProposalWithOutlines(Integer proposalId) {
+    public OutlineResponse getProposalWithOutlines(final Integer proposalId) {
         // Fetch the proposal by ID
-        RequestForProposal proposal = findProposalById(proposalId);
+        final RequestForProposal proposal = findProposalById(proposalId);
 
         // Fetch all top-level (parent) sections
         List<ResponseOutline> parentSections = responseOutlineRepository.findAll(parentSectionSpecification(proposalId));
         parentSections = sortSubSection(parentSections);
 
         // Convert parent sections to DTOs
-        List<SectionResponse> sectionResponses = parentSections.stream()
-                .map(this::mapToSectionResponse).toList();
-        return  OutlineResponse.builder().outlineTitle(proposal.getTitle()).sections(sectionResponses).build();
+        final List<SectionResponse> sectionResponses = parentSections.stream()
+                .map(this::mapToSectionResponse)
+                .collect(Collectors.toList());
+        return OutlineResponse.builder().outlineTitle(proposal.getTitle()).sections(sectionResponses).build();
     }
 
     @Override
-    public void updateResponseOutline(OutlineResponse request, Integer proposalId) {
+    public void updateResponseOutline(final OutlineResponse request, final Integer proposalId) {
         // Fetch the proposal by ID
-        RequestForProposal proposal = findProposalById(proposalId);
+        final RequestForProposal proposal = findProposalById(proposalId);
 
         // Fetch all top-level (parent) sections
-        List<ResponseOutline> parentSections = responseOutlineRepository.findAll(parentSectionSpecification(proposalId));
+        final List<ResponseOutline> parentSections = responseOutlineRepository.findAll(parentSectionSpecification(proposalId));
 
-
-        List<ResponseOutline> outlines = new ArrayList<>();
-        outlines.addAll(parentSections);
-        //Fetch all low level outline child.
-        for (ResponseOutline outline : parentSections) {
-            outlines.addAll(getAllSubSectionFromDB(outline).toList());
+        final List<ResponseOutline> outlines = new ArrayList<>(parentSections);
+        // Fetch all low level outline child.
+        for (final ResponseOutline outline : parentSections) {
+            outlines.addAll(getAllSubSectionFromDB(outline).collect(Collectors.toList()));
         }
 
-        //Remove all existing relationship.
+        // Remove all existing relationship.
         removeExistingRelationship(outlines);
 
-        //Remove all existing relationship.
+        // Remove all existing relationship from proposal
         proposal.getResponseOutlines().clear();
 
         if (request.getSections() != null) {
-            List<SectionResponse> sections = request.getSections();
-            List<SubSectionResponse> subSectionList = new ArrayList<>();
-            for (SectionResponse response : sections) {
+            final List<SectionResponse> sections = request.getSections();
+            final List<SubSectionResponse> subSectionList = new ArrayList<>();
+            for (final SectionResponse response : sections) {
                 if (response.getSubsections() != null) {
-                    List<SubSectionResponse> subSectionResponses = getAllSubsection(response.getSubsections()).toList();
+                    final List<SubSectionResponse> subSectionResponses = getAllSubsection(response.getSubsections()).collect(Collectors.toList());
                     subSectionList.addAll(subSectionResponses);
                 }
             }
-            Set<Integer> outlineIdsFromRequest = Stream.concat(subSectionList.stream().filter(subSectionResponse -> subSectionResponse.getOutlineSubSectionId() != null).map(SubSectionResponse::getOutlineSubSectionId), sections.stream().filter(sectionResponse -> sectionResponse.getOutlineSectionId() != null).map(SectionResponse::getOutlineSectionId)).collect(Collectors.toSet());
+            final Set<Integer> outlineIdsFromRequest = Stream.concat(
+                            subSectionList.stream()
+                                    .filter(subSectionResponse -> subSectionResponse.getOutlineSubSectionId() != null)
+                                    .map(SubSectionResponse::getOutlineSubSectionId),
+                            sections.stream()
+                                    .filter(sectionResponse -> sectionResponse.getOutlineSectionId() != null)
+                                    .map(SectionResponse::getOutlineSectionId))
+                    .collect(Collectors.toSet());
 
-            //Remove from DB.
+            // Remove from DB.
             removeExistingOutlineFromDB(outlineIdsFromRequest, outlines);
 
-            //Update or create outline and assign to its parent recursively.
+            // Update or create outline and assign to its parent recursively.
             proposal.getResponseOutlines().addAll(updateSections(request, proposal, outlines));
         }
 
@@ -195,25 +200,25 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
     }
 
     @Override
-    public void deleteRequestForProposal(Integer proposalId) {
-        RequestForProposal proposal = getProposalById(proposalId);
+    public void deleteRequestForProposal(final Integer proposalId) {
+        final RequestForProposal proposal = getProposalById(proposalId);
         proposal.setArchived(true);
         repository.save(proposal);
     }
 
     @Override
-    public void deleteResponseOutline(Integer outlineId) {
+    public void deleteResponseOutline(final Integer outlineId) {
         responseOutlineRepository.deleteById(outlineId);
     }
 
     @Override
-    public RequestForProposal getProposalById(Integer proposalId) {
+    public RequestForProposal getProposalById(final Integer proposalId) {
         return findProposalById(proposalId);
     }
 
     @Override
-    public void updateRequestForProposal(ProposalRequest request, Integer proposalId) {
-        RequestForProposal proposal = findProposalById(proposalId);
+    public void updateRequestForProposal(final ProposalRequest request, final Integer proposalId) {
+        final RequestForProposal proposal = findProposalById(proposalId);
         if (request.getStatus() != RequestForProposal.Status.UPLOADED) {
             proposal.setStatus(request.getStatus());
         }
@@ -226,15 +231,14 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         if (request.getDeadline() != null) {
             proposal.setDeadline(request.getDeadline());
         }
-
         if (request.getSolicitationId() != null) {
             proposal.setSolicitationId(request.getSolicitationId());
         }
     }
 
     @Override
-    public void updateSingleResponseOutline(SingleOutlineRequest request, Integer outlineId) {
-        ResponseOutline outline = findResponseOutlineById(outlineId);
+    public void updateSingleResponseOutline(final SingleOutlineRequest request, final Integer outlineId) {
+        final ResponseOutline outline = findResponseOutlineById(outlineId);
         if (StringUtils.isNotBlank(request.getContext())) {
             outline.setContext(request.getContext());
         }
@@ -248,54 +252,54 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
             outline.setSectionTitle(request.getSectionTitle());
         }
         if (request.isGeneratedContent()) {
-            outline.setGeneratedContent(request.isGeneratedContent());
+            outline.setGeneratedContent(true);
         }
-        if(StringUtils.isNotBlank(request.getInstructionsToWriter())) {
+        if (StringUtils.isNotBlank(request.getInstructionsToWriter())) {
             outline.setInstructionsToWriter(request.getInstructionsToWriter());
         }
-        if(ObjectUtils.isNotEmpty(request.getSourceMapping())) {
+        if (ObjectUtils.isNotEmpty(request.getSourceMapping())) {
             outline.setSourceMapping(request.getSourceMapping());
         }
-        if(StringUtils.isNotBlank(request.getSectionPurpose())) {
+        if (StringUtils.isNotBlank(request.getSectionPurpose())) {
             outline.setSectionPurpose(request.getSectionPurpose());
         }
-        if(ObjectUtils.isNotEmpty(request.getWinThemeAlignment())) {
+        if (ObjectUtils.isNotEmpty(request.getWinThemeAlignment())) {
             outline.setWinThemeAlignment(request.getWinThemeAlignment());
         }
         outline.setContent(request.getContent());
         responseOutlineRepository.save(outline);
     }
 
-    public byte[] generateOutlineDoc(Integer proposalId) {
-        OutlineResponse outlineResponse = getProposalWithOutlines(proposalId);
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-             XWPFDocument document = helper.createDocument(outlineResponse)) {
+    @Override
+    public byte[] generateOutlineDoc(final Integer proposalId) {
+        final OutlineResponse outlineResponse = getProposalWithOutlines(proposalId);
+        try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+             final XWPFDocument document = helper.createDocument(outlineResponse)) {
             document.write(outputStream);
-            document.close();
             return outputStream.toByteArray();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new AppException(INTERNAL_ERROR);
         }
     }
 
     // private method region start.
 
-    private RequestForProposal findProposalById(Integer proposalId) {
+    private RequestForProposal findProposalById(final Integer proposalId) {
         return repository.findById(proposalId)
                 .orElseThrow(() -> new AppException(RFP_NOT_FOUND));
     }
 
-    private ResponseOutline findResponseOutlineById(Integer outlineId) {
+    private ResponseOutline findResponseOutlineById(final Integer outlineId) {
         return responseOutlineRepository.findById(outlineId)
                 .orElseThrow(() -> new AppException(RESPONSE_OUTLINE_NOT_FOUND));
     }
 
-    private SectionResponse mapToSectionResponse(ResponseOutline parent) {
+    private SectionResponse mapToSectionResponse(final ResponseOutline parent) {
         // Fetch and map subsections (child sections) recursively
         List<ResponseOutline> firstLevelChild = responseOutlineRepository.findAll(childSpecification(parent));
         firstLevelChild = sortSubSection(firstLevelChild);
-        List<SubSectionResponse> listOfSubsection = new ArrayList<>();
-        for (ResponseOutline outline : firstLevelChild) {
+        final List<SubSectionResponse> listOfSubsection = new ArrayList<>();
+        for (final ResponseOutline outline : firstLevelChild) {
             listOfSubsection.add(SubSectionResponse.builder()
                     .outlineSubSectionId(outline.getId())
                     .isGeneratedContent(outline.isGeneratedContent())
@@ -310,7 +314,7 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
                     .sectionPurpose(outline.getSectionPurpose())
                     .winThemeAlignment(outline.getWinThemeAlignment())
                     .instructionsToWriter(outline.getInstructionsToWriter())
-                    .subsections(getSubSectionsRecursively(outline, new AtomicInteger(0))) // Recursive call
+                    .subsections(getSubSectionsRecursively(outline, new AtomicInteger(1))) // Recursive call starting depth 1
                     .build());
         }
         return SectionResponse.builder()
@@ -326,15 +330,13 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
                 .sectionNumber(parent.getSectionNo()).build();
     }
 
-    private List<SubSectionResponse> getSubSectionsRecursively(ResponseOutline parent, AtomicInteger depth) {
-        if (depth.incrementAndGet() >= maxDepth) { // Stop recursion after maxDepth levels
+    private List<SubSectionResponse> getSubSectionsRecursively(final ResponseOutline parent, final AtomicInteger depth) {
+        if (depth.get() >= maxDepth) { // Stop recursion after maxDepth levels
             return Collections.emptyList();
         }
+        depth.incrementAndGet();
 
         List<ResponseOutline> childSections = responseOutlineRepository.findAll(childSpecification(parent));
-
-        // Sort before mapping
-       // childSections.sort(Comparator.comparing(ResponseOutline::getSectionNo));
         childSections = sortSubSection(childSections);
 
         return childSections.stream()
@@ -352,40 +354,42 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
                         .sectionPurpose(child.getSectionPurpose())
                         .winThemeAlignment(child.getWinThemeAlignment())
                         .instructionsToWriter(child.getInstructionsToWriter())
-                        .subsections(getSubSectionsRecursively(child, new AtomicInteger(depth.get()))) // Recursive call
+                        .subsections(getSubSectionsRecursively(child, depth)) // Recursive call passes same depth instance
                         .build())
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    private void removeExistingRelationship(List<ResponseOutline> parentSections) {
-        for (ResponseOutline outline : parentSections) {
+    private void removeExistingRelationship(final List<ResponseOutline> parentSections) {
+        for (final ResponseOutline outline : parentSections) {
             if (ObjectUtils.isNotEmpty(outline.getChildSection())) {
                 outline.getChildSection().clear();
             }
         }
     }
 
-    private void removeExistingOutlineFromDB(Set<Integer> ids, List<ResponseOutline> outlinesFromDB) {
-        for (ResponseOutline outline : outlinesFromDB) {
+    private void removeExistingOutlineFromDB(final Set<Integer> ids, final List<ResponseOutline> outlinesFromDB) {
+        for (final ResponseOutline outline : outlinesFromDB) {
             if (!ids.contains(outline.getId())) {
                 deleteResponseOutline(outline.getId());
             }
         }
     }
 
-    private List<ResponseOutline> updateSections(OutlineResponse request, RequestForProposal proposal, List<ResponseOutline> allOutlines) {
-        List<SectionResponse> sections = request.getSections();
-        List<ResponseOutline> outlines = new ArrayList<>();
-        ResponseOutline parentOutline = null;
-        Map<Integer, ResponseOutline> allExistingOutline = allOutlines.stream().collect(Collectors.toMap(ResponseOutline::getId, Function.identity()));
-        for (SectionResponse section : sections) {
-            List<ResponseOutline> responseSubsections = new ArrayList<>();
+    private List<ResponseOutline> updateSections(final OutlineResponse request, final RequestForProposal proposal, final List<ResponseOutline> allOutlines) {
+        final List<SectionResponse> sections = request.getSections();
+        final List<ResponseOutline> outlines = new ArrayList<>();
+        Map<Integer, ResponseOutline> allExistingOutline = allOutlines.stream()
+                .collect(Collectors.toMap(ResponseOutline::getId, Function.identity()));
+        for (final SectionResponse section : sections) {
+            final List<ResponseOutline> responseSubsections = new ArrayList<>();
+            ResponseOutline parentOutline;
             if (section.getOutlineSectionId() == null) {
                 parentOutline = createOutline(section, proposal);
             } else if (allExistingOutline.containsKey(section.getOutlineSectionId())) {
                 parentOutline = updateSection(section, allExistingOutline.get(section.getOutlineSectionId()));
+            } else {
+                parentOutline = createOutline(section, proposal);
             }
-            parentOutline = allExistingOutline.get(section.getOutlineSectionId()) == null ? parentOutline : allExistingOutline.get(section.getOutlineSectionId());
             if (section.getSubsections() != null) {
                 parentOutline.getChildSection().addAll(processSubSection(section.getSubsections(), parentOutline, allExistingOutline, responseSubsections, proposal));
             }
@@ -394,16 +398,14 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         return outlines;
     }
 
-    private List<ResponseOutline> processSubSection(List<SubSectionResponse> subSections, ResponseOutline parentOutline, Map<Integer, ResponseOutline> allExistingOutline, List<ResponseOutline> responseSubsections, RequestForProposal proposal) {
-        ResponseOutline outline;
-        for (SubSectionResponse subSectionResponse : subSections) {
-
+    private List<ResponseOutline> processSubSection(final List<SubSectionResponse> subSections, final ResponseOutline parentOutline, final Map<Integer, ResponseOutline> allExistingOutline, final List<ResponseOutline> responseSubsections, final RequestForProposal proposal) {
+        for (final SubSectionResponse subSectionResponse : subSections) {
+            final ResponseOutline outline;
             if (subSectionResponse.getOutlineSubSectionId() == null) {
                 outline = createOutline(subSectionResponse, parentOutline, proposal);
             } else {
                 outline = updateSubSection(subSectionResponse, allExistingOutline.get(subSectionResponse.getOutlineSubSectionId()), parentOutline);
             }
-
             if (subSectionResponse.getSubsections() != null) {
                 outline.getChildSection().addAll(processSubSection(subSectionResponse.getSubsections(), outline, allExistingOutline, responseSubsections, proposal));
             }
@@ -412,7 +414,7 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         return responseSubsections;
     }
 
-    private ResponseOutline updateSubSection(SubSectionResponse section, ResponseOutline toBeUpdatedOutline, ResponseOutline parentOutline) {
+    private ResponseOutline updateSubSection(final SubSectionResponse section, final ResponseOutline toBeUpdatedOutline, final ResponseOutline parentOutline) {
         toBeUpdatedOutline.setSectionNo(section.getSubSectionNumber());
         toBeUpdatedOutline.setRequirement(section.getRequirement());
         toBeUpdatedOutline.setContext(section.getContext());
@@ -425,31 +427,29 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         return toBeUpdatedOutline;
     }
 
-    private Stream<SubSectionResponse> getAllSubsection(List<SubSectionResponse> subSectionResponses) {
-
-        return Stream.concat(subSectionResponses != null ? subSectionResponses.stream() : Stream.empty(), subSectionResponses.stream().flatMap(this::collectSubsection));
+    private Stream<SubSectionResponse> getAllSubsection(final List<SubSectionResponse> subSectionResponses) {
+        if (subSectionResponses == null) {
+            return Stream.empty();
+        }
+        return Stream.concat(subSectionResponses.stream(), subSectionResponses.stream().flatMap(this::collectSubsection));
     }
 
-    private Stream<SubSectionResponse> collectSubsection(SubSectionResponse subSectionResponse) {
+    private Stream<SubSectionResponse> collectSubsection(final SubSectionResponse subSectionResponse) {
         if (subSectionResponse.getSubsections() == null) {
             return Stream.of(subSectionResponse);
         }
         return getAllSubsection(subSectionResponse.getSubsections());
     }
 
-    private Stream<ResponseOutline> getAllSubSectionFromDB(ResponseOutline parent) {
-
-        List<ResponseOutline> child = responseOutlineRepository.findAll(childSpecification(parent));
-
-        // Sort children based on sectionNumber before processing
+    private Stream<ResponseOutline> getAllSubSectionFromDB(final ResponseOutline parent) {
+        final List<ResponseOutline> child = responseOutlineRepository.findAll(childSpecification(parent));
         return Stream.concat(
-                child.stream().sorted(Comparator.comparing(ResponseOutline::getSectionNo)), // Sort at this level
-                child.stream()
-                        .flatMap(responseOutline -> getAllSubSectionFromDB(responseOutline))
+                child.stream().sorted(Comparator.comparing(ResponseOutline::getSectionNo)),
+                child.stream().flatMap(this::getAllSubSectionFromDB)
         );
     }
 
-    private ResponseOutline updateSection(SectionResponse section, ResponseOutline toBeUpdatedOutline) {
+    private ResponseOutline updateSection(final SectionResponse section, final ResponseOutline toBeUpdatedOutline) {
         toBeUpdatedOutline.setSectionNo(section.getSectionNumber());
         toBeUpdatedOutline.setRequirement(section.getRequirement());
         toBeUpdatedOutline.setContext(section.getContext());
@@ -461,7 +461,7 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
         return toBeUpdatedOutline;
     }
 
-    private ResponseOutline createOutline(SectionResponse section, RequestForProposal proposal) {
+    private ResponseOutline createOutline(final SectionResponse section, final RequestForProposal proposal) {
         return ResponseOutline.builder()
                 .sectionNo(section.getSectionNumber())
                 .proposal(proposal)
@@ -475,7 +475,7 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
                 .build();
     }
 
-    private ResponseOutline createOutline(SubSectionResponse subSectionResponse, ResponseOutline parentOutline, RequestForProposal proposal) {
+    private ResponseOutline createOutline(final SubSectionResponse subSectionResponse, final ResponseOutline parentOutline, final RequestForProposal proposal) {
         return ResponseOutline.builder()
                 .sectionNo(subSectionResponse.getSubSectionNumber())
                 .sectionTitle(subSectionResponse.getSubSectionTitle())
@@ -490,21 +490,33 @@ public class RequestForProposalServiceImpl implements RequestForProposalService 
                 .build();
     }
 
-    private List<ResponseOutline> sortSubSection(List<ResponseOutline> responseOutlines) {
-        return responseOutlines.stream().sorted((s1, s2) -> {
-            String[] parts1 = s1.getSectionNo().split("\\.");
-            String[] parts2 = s2.getSectionNo().split("\\.");
+    private List<ResponseOutline> sortSubSection(final List<ResponseOutline> responseOutlines) {
+        return responseOutlines.stream()
+                .sorted((s1, s2) -> {
+                    String[] parts1 = s1.getSectionNo().split("\\.");
+                    String[] parts2 = s2.getSectionNo().split("\\.");
 
-            int length = Math.max(parts1.length, parts2.length);
-            for (int i = 0; i < length; i++) {
-                int num1 = (i < parts1.length) ? Integer.parseInt(parts1[i]) : 0;
-                int num2 = (i < parts2.length) ? Integer.parseInt(parts2[i]) : 0;
-                if (num1 != num2) {
-                    return Integer.compare(num1, num2);
-                }
-            }
+                    int length = Math.max(parts1.length, parts2.length);
+
+                    for (int i = 0; i < length; i++) {
+                        int num1 = (i < parts1.length) ? safeParseInt(parts1[i]) : 0;
+                        int num2 = (i < parts2.length) ? safeParseInt(parts2[i]) : 0;
+                        if (num1 != num2) {
+                            return Integer.compare(num1, num2);
+                        }
+                    }
+                    return 0;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private int safeParseInt(final String str) {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse section number part '{}', defaulting to 0", str);
             return 0;
-        }).toList();
+        }
     }
 
     //private method region end.
