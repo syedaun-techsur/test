@@ -9,6 +9,7 @@ import solutions.techsur.rfpaiservice.dto.CommonFilter;
 import solutions.techsur.rfpaiservice.entity.RequestForProposal;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,20 +17,33 @@ import java.util.List;
 @Slf4j
 public class RFPSpecification {
 
-
     public static Specification<RequestForProposal> multiFieldSearch(CommonFilter filter) {
         return (root, query, criteriaBuilder) -> {
+            String search = filter.getSearch();
+            if (search == null || search.trim().isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+
+            String searchLower = search.toLowerCase();
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.or(criteriaBuilder.like(root.get("title"), "%" + filter.getSearch().toLowerCase() + "%")));
-            predicates.add(criteriaBuilder.like(root.get("description"), "%" + filter.getSearch().toLowerCase() + "%"));
-            predicates.add(criteriaBuilder.like(root.get("solicitationId"), "%" + filter.getSearch().toLowerCase() + "%"));
+
+            // Use criteriaBuilder.lower for case-insensitive matching on fields
+            Predicate titlePredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("title")), "%" + searchLower + "%");
+            Predicate descriptionPredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("description")), "%" + searchLower + "%");
+            Predicate solicitationIdPredicate = criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("solicitationId")), "%" + searchLower + "%");
+
+            predicates.add(criteriaBuilder.or(titlePredicate, descriptionPredicate, solicitationIdPredicate));
 
             try {
-                LocalDate date = LocalDate.parse(filter.getSearch());
+                LocalDate date = LocalDate.parse(search);
                 predicates.add(criteriaBuilder.equal(root.get("deadline"), date));
-            } catch (Exception ex) {
-                log.warn("Error while parsing string to date");
+            } catch (DateTimeParseException ex) {
+                log.warn("Unable to parse search string to date: {}", ex.getMessage());
             }
+
             return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
     }
