@@ -35,78 +35,81 @@
 
 @REM Begin all REM lines with '@' in case MAVEN_BATCH_ECHO is 'on'
 @echo off
-@REM set title of command window
-title %0
-@REM enable echoing by setting MAVEN_BATCH_ECHO to 'on'
-@if "%MAVEN_BATCH_ECHO%" == "on"  echo %MAVEN_BATCH_ECHO%
+@REM Set command window title to script name
+title %~nx0
+@REM Enable echoing by setting MAVEN_BATCH_ECHO to 'on'
+@if "%MAVEN_BATCH_ECHO%" == "on" echo %MAVEN_BATCH_ECHO%
 
-@REM set %HOME% to equivalent of $HOME
-if "%HOME%" == "" (set "HOME=%HOMEDRIVE%%HOMEPATH%")
+@REM Set HOME equivalent if not set
+if "%HOME%"=="" (
+    set "HOME=%HOMEDRIVE%%HOMEPATH%"
+)
 
-@REM Execute a user defined script before this one
-if not "%MAVEN_SKIP_RC%" == "" goto skipRcPre
-@REM check for pre script, once with legacy .bat ending and once with .cmd ending
+@REM Execute user defined pre script
+if not "%MAVEN_SKIP_RC%"=="" goto skipRcPre
 if exist "%USERPROFILE%\mavenrc_pre.bat" call "%USERPROFILE%\mavenrc_pre.bat" %*
 if exist "%USERPROFILE%\mavenrc_pre.cmd" call "%USERPROFILE%\mavenrc_pre.cmd" %*
 :skipRcPre
 
 @setlocal
 
-set ERROR_CODE=0
+set "ERROR_CODE=0"
 
 @REM To isolate internal variables from possible post scripts, we use another setlocal
 @setlocal
 
 @REM ==== START VALIDATION ====
-if not "%JAVA_HOME%" == "" goto OkJHome
+if not "%JAVA_HOME%"=="" goto OkJHome
 
 echo.
-echo Error: JAVA_HOME not found in your environment. >&2
-echo Please set the JAVA_HOME variable in your environment to match the >&2
-echo location of your Java installation. >&2
+echo Error: JAVA_HOME not found in your environment. 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
 echo.
 goto error
 
 :OkJHome
-if exist "%JAVA_HOME%\bin\java.exe" goto init
+if exist "%JAVA_HOME%\bin\java.exe" (
+    goto init
+)
 
 echo.
-echo Error: JAVA_HOME is set to an invalid directory. >&2
-echo JAVA_HOME = "%JAVA_HOME%" >&2
-echo Please set the JAVA_HOME variable in your environment to match the >&2
-echo location of your Java installation. >&2
+echo Error: JAVA_HOME is set to an invalid directory. 1>&2
+echo JAVA_HOME = "%JAVA_HOME%" 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
 echo.
 goto error
 
 :init
+@REM Isolate environment variables after JAVA_HOME check
+@setlocal
+
 @REM Decide how to startup depending on the version of windows
 
 @REM -- 4NT shell
-if "%@eval[2+2]" == "4" goto 4nt_args
+if "%@eval[2+2]"=="4" goto 4nt_args
 
 @REM -- Regular WNT shell
-set MAVEN_CMD_LINE_ARGS=%*
+set "MAVEN_CMD_LINE_ARGS=%*"
 goto endInit
 
 :4nt_args
-@REM -- 4NT shell
-set MAVEN_CMD_LINE_ARGS=%$
+@REM -- 4NT shell args
+set "MAVEN_CMD_LINE_ARGS=%$"
 goto endInit
 
 :endInit
 @REM End local scope for the windows with 4NT shell
 if "%OS%"=="Windows_NT" endlocal
 
-:omega
-@REM End local scope for the windows with NT shell
-if "%OS%"=="Windows_NT" endlocal
+@REM Set APP_HOME for locating wrapper jar - fallback to script directory if not defined
+if "%APP_HOME%"=="" (
+    set "APP_HOME=%~dp0"
+)
 
-:omega
-@REM set the title
-if "%OS%"=="Windows_NT" title %0
-
-@REM clear the title
-if "%OS%"=="Windows_NT" title
+@REM Trim trailing backslash if any
+if "%APP_HOME:~-1%"=="\" set "APP_HOME=%APP_HOME:~0,-1%"
 
 @REM Now execute the command
 "%JAVA_HOME%\bin\java.exe" ^
@@ -119,20 +122,21 @@ if ERRORLEVEL 1 goto error
 goto end
 
 :error
-set ERROR_CODE=1
+set "ERROR_CODE=1"
 
 :end
-@endlocal & set ERROR_CODE=%ERROR_CODE%
+@endlocal
+@endlocal
 
 if not "%MAVEN_SKIP_RC%"=="" goto skipRcPost
-@REM check for post script, once with legacy .bat ending and once with .cmd ending
+@REM Execute user defined post script
 if exist "%USERPROFILE%\mavenrc_post.bat" call "%USERPROFILE%\mavenrc_post.bat"
 if exist "%USERPROFILE%\mavenrc_post.cmd" call "%USERPROFILE%\mavenrc_post.cmd"
 :skipRcPost
 
-@REM pause the script if MAVEN_BATCH_PAUSE is set to 'on'
+@REM Pause the script if MAVEN_BATCH_PAUSE is 'on'
 if "%MAVEN_BATCH_PAUSE%"=="on" pause
 
-if "%MAVEN_TERMINATE_CMD%"=="on" exit %ERROR_CODE%
+if "%MAVEN_TERMINATE_CMD%"=="on" exit /b %ERROR_CODE%
 
-cmd /C exit /B %ERROR_CODE% 
+cmd /C exit /B %ERROR_CODE%
