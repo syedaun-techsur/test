@@ -9,40 +9,48 @@ import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import solutions.techsur.common.microservice.entity.BaseEntity;
 
-@Table(name = "compliance_matrix")
 @Entity
-@EqualsAndHashCode(callSuper = true)
+@Table(name = "compliance_matrix")
+@Audited
+@AuditTable(value = "compliance_matrix_aud")
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-@Audited
-@AuditTable(value = "compliance_matrix_aud")
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class ComplianceMatrix extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(length = 255, nullable = false)
+    @NonNull
     private String requirement;
 
-    @Column(name = "compliance_status")
-    @Builder.Default
+    @Column(name = "compliance_status", length = 10, nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private ComplianceStatus status = ComplianceStatus.PASS;
 
+    @Column(length = 255)
     private String justification;
 
-    @ManyToOne
-    @JoinColumn(name = "rfp_id", referencedColumnName = "id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rfp_id", referencedColumnName = "id", nullable = false)
     @JsonBackReference
+    @NonNull
     private RequestForProposal proposal;
 
-    @Column(name = "section_no")
+    @Column(name = "section_no", length = 50)
     private String sectionNo;
 
+    /**
+     * Enum representing compliance status with JSON serialization support.
+     */
     public enum ComplianceStatus {
-        FAIL("Fail"), PASS("Pass");
+        FAIL("Fail"),
+        PASS("Pass");
 
         private final String value;
 
@@ -50,8 +58,13 @@ public class ComplianceMatrix extends BaseEntity {
             this.value = value;
         }
 
-        @JsonValue  // Ensures this value is used in JSON responses
+        @JsonValue
         public String getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
             return value;
         }
     }
