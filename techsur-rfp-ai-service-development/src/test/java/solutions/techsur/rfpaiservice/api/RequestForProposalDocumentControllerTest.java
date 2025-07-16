@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -39,7 +38,7 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testUploadRFPDocument() {
-        when(documentService.uploadRFPDocument(any(), anyInt(), eq(false), eq(false))).thenReturn("File uploaded successfully.");
+        when(documentService.uploadRFPDocument(any(MockMultipartFile[].class), anyInt(), eq(false), eq(false))).thenReturn("File uploaded successfully.");
 
         ResponseEntity<String> response = documentController.uploadRFPDocument(new MockMultipartFile[]{mockFile}, 1);
 
@@ -49,7 +48,7 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testDeleteRFPDocument() {
-        Mockito.doNothing().when(documentService).deleteRFPDocument(1);
+        doNothing().when(documentService).deleteRFPDocument(1);
 
         ResponseEntity<Void> response = documentController.deleteRFPDocument(1);
 
@@ -58,19 +57,14 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testReplaceDocument() {
-        // Correct argument matchers
-        Mockito.doNothing().when(documentService).replaceRPFDocument(any(), anyInt(), eq(false), eq(false));
+        doNothing().when(documentService).replaceRPFDocument(any(MockMultipartFile.class), anyInt(), eq(false), eq(false));
 
-        // Perform the request
         ResponseEntity<Void> response = documentController.replaceDocument(1, mockFile, false);
 
-        // Validate response
         assertEquals(204, response.getStatusCodeValue());
 
-        // Verify method invocation
-        verify(documentService, times(1)).replaceRPFDocument(any(), anyInt(), eq(false), eq(false));
+        verify(documentService, times(1)).replaceRPFDocument(any(MockMultipartFile.class), anyInt(), eq(false), eq(false));
     }
-
 
     @Test
     void testGetDocumentByRequestProposalId() {
@@ -85,7 +79,7 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testUploadBlueBookRFPDocument() {
-        when(documentService.uploadBlueBookRFPDocument(any(), any(), eq(true))).thenReturn("File uploaded successfully.");
+        when(documentService.uploadBlueBookRFPDocument(any(MockMultipartFile[].class), anyInt(), eq(true))).thenReturn("File uploaded successfully.");
 
         ResponseEntity<String> response = documentController.uploadBlueBookRFPDocument(new MockMultipartFile[]{mockFile}, 1);
 
@@ -95,7 +89,7 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testUploadAdminBlueBookRFPDocument() {
-        when(documentService.uploadAdminBlueBookRFPDocument(any(), eq(true), eq(true)))
+        when(documentService.uploadAdminBlueBookRFPDocument(any(MockMultipartFile[].class), eq(true), eq(true)))
                 .thenReturn("File uploaded successfully.");
 
         ResponseEntity<String> response = documentController.uploadAdminBlueBookRFPDocument(new MockMultipartFile[]{mockFile});
@@ -103,7 +97,6 @@ public class RequestForProposalDocumentControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("File uploaded successfully.", response.getBody());
     }
-
 
     @Test
     void testGetAllBluePrintDocumentUploadedByAdmin() {
@@ -118,7 +111,7 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testReplaceAdminBlueBookDocument() {
-        Mockito.doNothing().when(documentService).replaceAdminBlueBookDocument(any(), any());
+        doNothing().when(documentService).replaceAdminBlueBookDocument(anyInt(), any(MockMultipartFile.class));
 
         ResponseEntity<Void> response = documentController.replaceAdminBlueBookDocument(1, mockFile);
 
@@ -127,14 +120,11 @@ public class RequestForProposalDocumentControllerTest {
 
     @Test
     void testCopyDocuments_Success() {
-        // Arrange
         String solicitationId = "12345";
         List<Integer> documentIds = Arrays.asList(101, 102, 103);
 
-        // Act
         ResponseEntity<Void> response = documentController.copyDocuments(solicitationId, documentIds);
 
-        // Assert
         verify(documentService, times(1)).copyDocuments(solicitationId, documentIds);
         assertEquals(204, response.getStatusCodeValue());
         assertNull(response.getBody());
