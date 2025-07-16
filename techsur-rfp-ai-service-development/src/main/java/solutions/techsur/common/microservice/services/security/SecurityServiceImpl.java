@@ -14,7 +14,7 @@ import java.util.Set;
 @Service
 public class SecurityServiceImpl implements SecurityService {
 	@Autowired
-	ObjectMapper objectMapper;
+	private ObjectMapper objectMapper;
 
 	@Override
 	public Jwt getCurrentUserJwt() {
@@ -29,7 +29,7 @@ public class SecurityServiceImpl implements SecurityService {
 		}
 		return JwtUtils.getUserId(jwt);
 	}
-	
+
 	@Override
     public Long getCurrentUserSiteId() {
     	Jwt jwt = getCurrentUserJwt();
@@ -40,9 +40,13 @@ public class SecurityServiceImpl implements SecurityService {
 		if (userSiteIdString == null) {
 			return null;
 		}
-        return Long.valueOf(userSiteIdString);
+		try {
+	        return Long.valueOf(userSiteIdString);
+	    } catch (NumberFormatException e) {
+	    	return null;
+	    }
     }
-    
+
 	@Override
     public Long getCurrentUserRegionId() {
     	Jwt jwt = getCurrentUserJwt();
@@ -53,7 +57,11 @@ public class SecurityServiceImpl implements SecurityService {
 		if (userRegionIdString == null) {
 			return null;
 		}
-        return Long.valueOf(userRegionIdString);
+		try {
+	        return Long.valueOf(userRegionIdString);
+	    } catch (NumberFormatException e) {
+	    	return null;
+	    }
     }
 
 	@Override
@@ -62,7 +70,6 @@ public class SecurityServiceImpl implements SecurityService {
 		if (jwt == null) {
 			return Collections.emptySet();
 		}
-
 		return JwtUtils.getUserRoles(jwt);
 	}
 
@@ -74,10 +81,13 @@ public class SecurityServiceImpl implements SecurityService {
 		}
 		return JwtUtils.getBearerToken(jwt);
 	}
-	
+
 	@Override
 	public String getCurrentUserJwtJsonString() throws JsonProcessingException {
 		Jwt jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return null;
+		}
 		return objectMapper.writeValueAsString(jwt);
 	}
 }
