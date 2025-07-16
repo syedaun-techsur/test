@@ -1,0 +1,92 @@
+package solutions.techsur.common.microservice.services.security;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import solutions.techsur.common.microservice.services.SecurityService;
+import solutions.techsur.common.microservice.utils.JwtUtils;
+
+import java.util.Collections;
+import java.util.Set;
+
+@Service
+public class SecurityServiceImpl implements SecurityService {
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Override
+	public Object getCurrentUserJwt() {
+		return JwtUtils.getCurrentUserJwt();
+	}
+
+	@Override
+	public String getCurrentUserId() {
+		Object jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return null;
+		}
+		return JwtUtils.getUserId(jwt);
+	}
+
+	@Override
+    public Long getCurrentUserSiteId() {
+    	Object jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return null;
+		}
+		String userSiteIdString = JwtUtils.getUserSiteId(jwt);
+		if (userSiteIdString == null) {
+			return null;
+		}
+		try {
+	        return Long.valueOf(userSiteIdString);
+	    } catch (NumberFormatException e) {
+	    	return null;
+	    }
+    }
+
+	@Override
+    public Long getCurrentUserRegionId() {
+    	Object jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return null;
+		}
+		String userRegionIdString = JwtUtils.getUserRegionId(jwt);
+		if (userRegionIdString == null) {
+			return null;
+		}
+		try {
+	        return Long.valueOf(userRegionIdString);
+	    } catch (NumberFormatException e) {
+	    	return null;
+	    }
+    }
+
+	@Override
+	public Set<String> getCurrentUserRoles() {
+		Object jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return Collections.emptySet();
+		}
+		return JwtUtils.getUserRoles(jwt);
+	}
+
+	@Override
+	public String getCurrentUserBearerToken() {
+		Object jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return null;
+		}
+		return JwtUtils.getBearerToken(jwt);
+	}
+
+	@Override
+	public String getCurrentUserJwtJsonString() throws JsonProcessingException {
+		Object jwt = getCurrentUserJwt();
+		if (jwt == null) {
+			return null;
+		}
+		return objectMapper.writeValueAsString(jwt);
+	}
+}
