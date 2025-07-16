@@ -2,7 +2,9 @@ package solutions.techsur.common.microservice.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +21,7 @@ import solutions.techsur.common.microservice.exceptions.StaleDataException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -30,27 +33,26 @@ public class CommonGlobalExceptionHandler extends ResponseEntityExceptionHandler
 	public static final String ERROR_CODE = "errorCode";
 
 	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+	public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
 		return makeResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)
-	public ResponseEntity<?> handleResourceNotFoundException(ResourceNotFoundException ex) {
+	public ResponseEntity<Map<String, String>> handleResourceNotFoundException(ResourceNotFoundException ex) {
 		return makeResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
 	}
 
 	@ExceptionHandler(StaleDataException.class)
-	public ResponseEntity<?> handleStaleDataException(StaleDataException ex) {
+	public ResponseEntity<Map<String, String>> handleStaleDataException(StaleDataException ex) {
 		return makeResponse(ex.getMessage(), HttpStatus.CONFLICT);
 	}
 	
 	@ExceptionHandler(InvalidRequestException.class)
-	public ResponseEntity<?> handleInvalidRequestException(InvalidRequestException ex) {
+	public ResponseEntity<Map<String, String>> handleInvalidRequestException(InvalidRequestException ex) {
 		return makeResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
 	}
 
-
-	private ResponseEntity<?> makeResponse(String message, HttpStatus status) {
+	private ResponseEntity<Map<String, String>> makeResponse(String message, HttpStatus status) {
 		Map<String, String> errorDetails = new HashMap<>();
 		errorDetails.put(MESSAGE, message);
 		return new ResponseEntity<>(errorDetails, status);
@@ -60,11 +62,13 @@ public class CommonGlobalExceptionHandler extends ResponseEntityExceptionHandler
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(
 			MethodArgumentNotValidException ex,
 			HttpHeaders headers,
-			HttpStatusCode status,
+			HttpStatus status,
 			WebRequest request) {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getBindingResult().getFieldErrors()
-				.stream().collect(Collectors
-						.toMap(FieldError::getField, FieldError::getDefaultMessage)));
+		Map<String, String> errors = ex.getBindingResult()
+				.getFieldErrors()
+				.stream()
+				.collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
 	}
 
 	@ExceptionHandler(AppException.class)
@@ -98,36 +102,40 @@ public class CommonGlobalExceptionHandler extends ResponseEntityExceptionHandler
 	}
 
 	private void logExceptionWithDetails(String message, Exception ex, HttpServletRequest request) {
-		var requestUrl = request.getRequestURI();
+		String requestUrl = request.getRequestURI();
 
 		// Log headers
-		var headers = new StringBuilder();
+		StringJoiner headersJoiner = new StringJoiner(", ");
 		var headerNames = request.getHeaderNames();
-		while (headerNames.hasMoreElements()) {
-			var name = headerNames.nextElement();
-			var value = request.getHeader(name);
-			headers.append(name).append(": ").append(value).append(", ");
+		if (headerNames != null) {
+			while (headerNames.hasMoreElements()) {
+				String name = headerNames.nextElement();
+				String value = request.getHeader(name);
+				headersJoiner.add(name + ": " + value);
+			}
 		}
 
 		// Log parameters
-		var paramString = new StringBuilder();
+		StringJoiner paramsJoiner = new StringJoiner(", ");
 		var parameterNames = request.getParameterNames();
-		while (parameterNames.hasMoreElements()) {
-			var name = parameterNames.nextElement();
-			var value = request.getParameter(name);
-			paramString.append(name).append(": ").append(value).append(", ");
+		if (parameterNames != null) {
+			while (parameterNames.hasMoreElements()) {
+				String name = parameterNames.nextElement();
+				String value = request.getParameter(name);
+				paramsJoiner.add(name + ": " + value);
+			}
 		}
 
-		var requestBody = "";
+		String requestBody = "";
 		if (request instanceof ContentCachingRequestWrapper) {
-			var wrappedRequest = (ContentCachingRequestWrapper) request;
-			var contentAsByteArray = wrappedRequest.getContentAsByteArray();
+			ContentCachingRequestWrapper wrappedRequest = (ContentCachingRequestWrapper) request;
+			byte[] contentAsByteArray = wrappedRequest.getContentAsByteArray();
 			if (contentAsByteArray != null && contentAsByteArray.length > 0) {
 				requestBody = new String(contentAsByteArray, StandardCharsets.UTF_8);
 			}
 		}
 
-		log.error("{} | URL: {} | Headers: {} | Request Params: {} | Request Body: {}",
-				message,  requestUrl, headers, paramString, requestBody, ex);
+		log.error("{} | URL: {} | Headers: [{}] | Request Params: [{}] | Request Body: {}",
+				message, requestUrl, headersJoiner.toString(), paramsJoiner.toString(), requestBody, ex);
 	}
 }
