@@ -3,10 +3,14 @@ package com.example;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+/**
+ * Integration test to verify that the Spring Boot application context loads successfully.
+ */
 @SpringBootTest
-class SimpleSpringBootApplicationTests {
+public class SimpleSpringBootApplicationTests {
 
     @Test
-    void contextLoads() {
+    public void contextLoads() {
+        // Test to ensure that the Spring application context loads without issues.
     }
-} 
+}
