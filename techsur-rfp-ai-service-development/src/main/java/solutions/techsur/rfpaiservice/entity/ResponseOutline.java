@@ -2,7 +2,6 @@ package solutions.techsur.rfpaiservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -16,14 +15,14 @@ import java.util.List;
 
 @Table(name = "response_outline")
 @Entity
-@EqualsAndHashCode(callSuper = true, exclude = {"proposal", "childSection", "parentSection"})
+@EqualsAndHashCode(callSuper = true, exclude = {"proposal", "childSections", "parentSection"})
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Data
 @Audited
 @AuditTable(value = "response_outline_aud")
-@ToString(callSuper = true, exclude = {"proposal", "childSection", "parentSection"})
+@ToString(callSuper = true, exclude = {"proposal", "childSections", "parentSection"})
 public class ResponseOutline extends BaseEntity {
 
     @Id
@@ -33,7 +32,7 @@ public class ResponseOutline extends BaseEntity {
     @Column(name = "section_no", nullable = false)
     private String sectionNo;
 
-    @Column(name = "section_title ", nullable = false)
+    @Column(name = "section_title", nullable = false)
     private String sectionTitle;
 
     @Column(name = "requirement", nullable = false)
@@ -42,17 +41,15 @@ public class ResponseOutline extends BaseEntity {
     @Column(name = "context", nullable = false)
     private String context;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_section_id", referencedColumnName = "id")
     @JsonBackReference
-    @JsonProperty("section")
     private ResponseOutline parentSection;
 
     @OneToMany(mappedBy = "parentSection", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Builder.Default
-    @JsonProperty("subsection")
-    private List<ResponseOutline> childSection = new ArrayList<>();
+    private List<ResponseOutline> childSections = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonBackReference
