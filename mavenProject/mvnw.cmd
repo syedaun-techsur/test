@@ -38,7 +38,7 @@
 @REM set title of command window
 title %0
 @REM enable echoing by setting MAVEN_BATCH_ECHO to 'on'
-@if "%MAVEN_BATCH_ECHO%" == "on"  echo %MAVEN_BATCH_ECHO%
+@if /I "%MAVEN_BATCH_ECHO%" == "on" echo %MAVEN_BATCH_ECHO%
 
 @REM set %HOME% to equivalent of $HOME
 if "%HOME%" == "" (set "HOME=%HOMEDRIVE%%HOMEPATH%")
@@ -61,9 +61,9 @@ set ERROR_CODE=0
 if not "%JAVA_HOME%" == "" goto OkJHome
 
 echo.
-echo Error: JAVA_HOME not found in your environment. >&2
-echo Please set the JAVA_HOME variable in your environment to match the >&2
-echo location of your Java installation. >&2
+echo Error: JAVA_HOME not found in your environment. 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
 echo.
 goto error
 
@@ -71,10 +71,10 @@ goto error
 if exist "%JAVA_HOME%\bin\java.exe" goto init
 
 echo.
-echo Error: JAVA_HOME is set to an invalid directory. >&2
-echo JAVA_HOME = "%JAVA_HOME%" >&2
-echo Please set the JAVA_HOME variable in your environment to match the >&2
-echo location of your Java installation. >&2
+echo Error: JAVA_HOME is set to an invalid directory. 1>&2
+echo JAVA_HOME = "%JAVA_HOME%" 1>&2
+echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo location of your Java installation. 1>&2
 echo.
 goto error
 
@@ -95,24 +95,23 @@ goto endInit
 
 :endInit
 @REM End local scope for the windows with 4NT shell
-if "%OS%"=="Windows_NT" endlocal
+if /I "%OS%"=="Windows_NT" endlocal
 
-:omega
+:omegaRemovesDupLabel
 @REM End local scope for the windows with NT shell
-if "%OS%"=="Windows_NT" endlocal
+if /I "%OS%"=="Windows_NT" endlocal
 
-:omega
-@REM set the title
-if "%OS%"=="Windows_NT" title %0
+@REM set the title (redundant but kept for compatibility)
+if /I "%OS%"=="Windows_NT" title %0
 
 @REM clear the title
-if "%OS%"=="Windows_NT" title
+if /I "%OS%"=="Windows_NT" title
 
 @REM Now execute the command
 "%JAVA_HOME%\bin\java.exe" ^
   %MAVEN_OPTS% ^
   %MAVEN_DEBUG_OPTS% ^
-  -classpath "%APP_HOME%\mvnw\maven-wrapper.jar" ^
+  -classpath ".mvn\wrapper\maven-wrapper.jar" ^
   "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" ^
   org.apache.maven.wrapper.MavenWrapperMain %MAVEN_CMD_LINE_ARGS%
 if ERRORLEVEL 1 goto error
@@ -122,7 +121,7 @@ goto end
 set ERROR_CODE=1
 
 :end
-@endlocal & set ERROR_CODE=%ERROR_CODE%
+@endlocal & endlocal & set ERROR_CODE=%ERROR_CODE%
 
 if not "%MAVEN_SKIP_RC%"=="" goto skipRcPost
 @REM check for post script, once with legacy .bat ending and once with .cmd ending
@@ -131,8 +130,8 @@ if exist "%USERPROFILE%\mavenrc_post.cmd" call "%USERPROFILE%\mavenrc_post.cmd"
 :skipRcPost
 
 @REM pause the script if MAVEN_BATCH_PAUSE is set to 'on'
-if "%MAVEN_BATCH_PAUSE%"=="on" pause
+if /I "%MAVEN_BATCH_PAUSE%"=="on" pause
 
-if "%MAVEN_TERMINATE_CMD%"=="on" exit %ERROR_CODE%
+if /I "%MAVEN_TERMINATE_CMD%"=="on" exit /b %ERROR_CODE%
 
-cmd /C exit /B %ERROR_CODE% 
+cmd /C exit /b %ERROR_CODE%
