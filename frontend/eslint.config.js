@@ -1,23 +1,35 @@
 import js from '@eslint/js'
 import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
-import { globalIgnores } from 'eslint/config'
+import { flatConfigGlobalIgnore } from 'eslint/config'
 
-export default tseslint.config([
-  globalIgnores(['dist']),
+export default [
+  flatConfigGlobalIgnore(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
     languageOptions: {
-      ecmaVersion: 2020,
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
       globals: globals.browser,
     },
+    plugins: {
+      'react-hooks': 'eslint-plugin-react-hooks',
+      'react-refresh': 'eslint-plugin-react-refresh',
+      '@typescript-eslint': '@typescript-eslint/eslint-plugin',
+    },
+    extends: [
+      js.configs.recommended,
+      'plugin:@typescript-eslint/recommended',
+      'plugin:react-hooks/recommended',
+      'plugin:react-refresh/recommended',
+    ],
+    rules: {
+      // Add any custom rule overrides here if needed
+    },
   },
-])
+]
