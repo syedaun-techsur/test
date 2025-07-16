@@ -5,13 +5,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
-import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
-
+/**
+ * Common web configuration for microservices.
+ * Enables Spring Data Web support and configures forwarded header filter.
+ */
 @Configuration
-@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
+@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class CommonWebConfig {
-	@Bean
-	ForwardedHeaderFilter forwardedHeaderFilter() {
-		return new ForwardedHeaderFilter();
-	}
+
+    /**
+     * Bean to handle forwarding of headers such as X-Forwarded-For.
+     * This helps in scenarios where the service is behind a proxy/load balancer.
+     */
+    @Bean
+    public ForwardedHeaderFilter forwardedHeaderFilter() {
+        return new ForwardedHeaderFilter();
+    }
 }
