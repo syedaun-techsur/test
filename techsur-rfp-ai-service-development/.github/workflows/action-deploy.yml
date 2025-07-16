@@ -5,17 +5,17 @@ on:
   push:
     branches:
       - main
-      - 'development'
-      - 'hotfix'
+      - development
+      - hotfix
     tags:
       - 'v*'
-      - '*'
   workflow_dispatch:
     inputs:
       project-type:
-        description: 'Specify the type of project (none, gradle, javascript, ruby, maven, , more ...)'
+        description: Specify the type of project (none, gradle, javascript, ruby, maven, more ...)
         required: true
-        default: 'gradle'
+        default: gradle
+
 permissions:
   contents: read
   pages: write
@@ -23,11 +23,12 @@ permissions:
 
 jobs:
   call-sub-workflow:
+    # Calling reusable workflow from techsur-solutions repository
     uses: techsur-solutions/techsur-ovh-deployments/.github/workflows/main.yml@main
     with:
-      project-type: 'gradle'
+      project-type: gradle
       repository: ${{ github.repository }}
       branch-name: ${{ github.ref }}
-      docker-context: '.'
-      deployment-chart: 'rfpai-service'
+      docker-context: .
+      deployment-chart: rfpai-service
     secrets: inherit
