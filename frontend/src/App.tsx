@@ -1,24 +1,27 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchHello } from './api';
 
 function App() {
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading } = useQuery<{ message: string }, Error>({
     queryKey: ['hello'],
     queryFn: fetchHello,
   });
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>Full Stack Demo (Vite + Spring Boot)</h1>
-      <p>
-        Backend says:{' '}
-        {isLoading
-          ? 'Loading...'
-          : error
-          ? `Error: ${(error as Error).message}`
-          : data?.message}
-      </p>
-    </div>
+    <>
+      <div style={{ padding: 32 }}>
+        <h1>Full Stack Demo (Vite + Spring Boot)</h1>
+        <p>
+          Backend says:{' '}
+          {isLoading
+            ? 'Loading...'
+            : error instanceof Error
+            ? `Error: ${error.message}`
+            : data?.message ?? ''}
+        </p>
+      </div>
+    </>
   );
 }
 
