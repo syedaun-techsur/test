@@ -46,23 +46,27 @@ spring:
     contexts: dev
     change-log: classpath:db/changelog-master.xml
     liquibase-schema: liquibase
+
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${RFP_APP_JWT_ISSUER:http://localhost:8180/realms/coding-challenge}
-          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+          jwk-set-uri: "${RFP_APP_JWT_ISSUER:http://localhost:8180/realms/coding-challenge}/protocol/openid-connect/certs"
       client:
         provider:
           keycloak:
-            token-uri: ${RFP_APP_JWT_ISSUER:http://localhost:8180/realms/coding-challenge}/protocol/openid-connect/token
+            token-uri: "${RFP_APP_JWT_ISSUER:http://localhost:8180/realms/coding-challenge}/protocol/openid-connect/token"
         registration:
           keycloak:
             provider: keycloak
             authorization-grant-type: client_credentials
             client-id: ${RFP_SYSTEM_CLIENT_ID:system}
             client-secret: ${RFP_SYSTEM_CLIENT_SECRET:secret}
-            scope: read,write
+            scope:
+              - read
+              - write
+
 management:
   endpoints:
     web:
@@ -78,13 +82,21 @@ management:
 springdoc:
   show-login-endpoint: true
   oAuthFlow:
-    authorizationUrl: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/auth
-    tokenUrl: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/token
+    authorizationUrl: "${RFP_APP_JWT_ISSUER:http://localhost:8180/realms/coding-challenge}/protocol/openid-connect/auth"
+    tokenUrl: "${RFP_APP_JWT_ISSUER:http://localhost:8180/realms/coding-challenge}/protocol/openid-connect/token"
   api-docs:
     enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
   swagger-ui:
     enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
-    supportedSubmitMethods: ${SPRINGDOC_SWAGGER_UI_SUPPORTED_SUBMIT_METHODS:get,put,post,delete,options,head,patch,trace}
+    supportedSubmitMethods:
+      - get
+      - put
+      - post
+      - delete
+      - options
+      - head
+      - patch
+      - trace
 
 logging:
   level:
@@ -94,19 +106,21 @@ logging:
     springfox.*: WARN
     org.hibernate.SQL: ERROR
     org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+
 common:
   microservice:
     cors:
       origins: ${COMMON_MICROSERVICE_CORS_ORIGINS:*}
       methods: ${COMMON_MICROSERVICE_CORS_METHODS:*}
       headers: ${COMMON_MICROSERVICE_CORS_HEADERS:*}
+
 s3:
   region: us-east-1
   bucketName: ${RFP_S3_BUCKET:techsur-rfpaiservice}
   accessKey: ${TS_AWS_ACCESS_KEY:accessKey}
   secretKey: ${TS_AWS_SECRET_KEY:secretKey}
   baseFolder: ${RFP_S3_BASE_FOLDER:techsur/rfp}
-  blueBookBaseFolder: ${RFP_S3_BASE_FOLDER:techsur/rfp}/bluebook
+  blueBookBaseFolder: "${RFP_S3_BASE_FOLDER:techsur/rfp}/bluebook"
 
 rfpaiapi:
   keycloak:
@@ -118,5 +132,3 @@ rfpaiapi:
   authority:
     upload-document: ${DOCUMENT_API_AUTHORITY_UPLOAD_DOCUMENT:contributor, admin}
     delete-proposal: ${RFP_API_AUTHORITY_DELETE:admin}
-
-
