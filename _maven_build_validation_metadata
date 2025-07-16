@@ -1,0 +1,7 @@
+{
+  "status": "ALL MAVEN BUILDS FAILED",
+  "details": [
+    "mavenProject/pom.xml: FAILED (after 0 corrections)"
+  ],
+  "timestamp": "maven_build_validation_with_correction_completed"
+}
