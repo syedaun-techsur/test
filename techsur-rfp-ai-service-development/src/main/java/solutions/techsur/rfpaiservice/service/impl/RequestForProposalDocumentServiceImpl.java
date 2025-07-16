@@ -2,7 +2,6 @@ package solutions.techsur.rfpaiservice.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -37,7 +36,6 @@ import static solutions.techsur.rfpaiservice.repository.RFPDocumentSpecification
 @Transactional
 public class RequestForProposalDocumentServiceImpl implements RequestForProposalDocumentService {
 
-
     private final DocumentHelper documentHelper;
 
     private final RequestForProposalRepository requestForProposalRepository;
@@ -48,7 +46,10 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("pdf", "docx", "txt", "xls", "xlsx", "doc");
 
-    public RequestForProposalDocumentServiceImpl(DocumentHelper documentHelper, RequestForProposalRepository requestForProposalRepository, RequestForProposalDocumentRepository documentRepository, Keycloak keycloak) {
+    public RequestForProposalDocumentServiceImpl(final DocumentHelper documentHelper,
+                                                 final RequestForProposalRepository requestForProposalRepository,
+                                                 final RequestForProposalDocumentRepository documentRepository,
+                                                 final Keycloak keycloak) {
         this.documentHelper = documentHelper;
         this.requestForProposalRepository = requestForProposalRepository;
         this.documentRepository = documentRepository;
@@ -56,38 +57,34 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
     }
 
     @Override
-    public String uploadRFPDocument(MultipartFile[] files, Integer proposalId, boolean isBlueBook, boolean isAdmin) {
-        // validate file
-        for (MultipartFile file : files) {
-           String [] fileValidationMessage = validateMultipartFile(file);
-            // if file is not valid then return message from here.
-            if (ObjectUtils.isNotEmpty(fileValidationMessage)) {
+    public String uploadRFPDocument(final MultipartFile[] files, final Integer proposalId, final boolean isBlueBook, final boolean isAdmin) {
+        // Validate each file before processing
+        for (final MultipartFile file : files) {
+            final String[] fileValidationMessage = validateMultipartFile(file);
+            if (fileValidationMessage.length > 0) {
                 throw new AppException(INVALID_FILE, fileValidationMessage);
             }
         }
 
-        // Get Proposal.
-        RequestForProposal proposal = null;
-        if (proposalId != null) {
-            proposal = findProposalById(proposalId);
-        }
+        final RequestForProposal proposal = (proposalId != null) ? findProposalById(proposalId) : null;
 
-        List<RequestForProposalDocument> documents = new ArrayList<>();
+        final List<RequestForProposalDocument> documents = new ArrayList<>();
 
-        RequestForProposal finalProposal = proposal;
-        List<String> uploadedFiles = Arrays.stream(files)
+        final RequestForProposal finalProposal = proposal;
+        final List<String> uploadedFiles = Arrays.stream(files)
                 .map(file -> {
-                    String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-                    String fileKey;
-
+                    final String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+                    final String fileKey;
                     if (isAdmin && isBlueBook) {
                         fileKey = documentHelper.getFilePathForAdminBlueBook(fileName);
                     } else {
+                        if (finalProposal == null) {
+                            throw new AppException(INVALID_FILE, "Proposal ID must be provided for non-admin uploads");
+                        }
                         fileKey = documentHelper.getFilePath(isBlueBook, fileName, finalProposal.getId());
                     }
 
-                    // Save document metadata first
-                    RequestForProposalDocument document = RequestForProposalDocument.builder()
+                    final RequestForProposalDocument document = RequestForProposalDocument.builder()
                             .fileName(fileName)
                             .requestForProposal(finalProposal)
                             .filePath(fileKey)
@@ -98,38 +95,38 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
                         documentHelper.uploadRFPDocument(file, fileKey);
                         return fileName;
                     } catch (IOException e) {
-                        throw new AppException(INTERNAL_ERROR, "Facing issue while uploading the file " + fileName);
+                        log.error("Error uploading file {}", fileName, e);
+                        throw new AppException(INTERNAL_ERROR, "Facing issue while uploading the file " + fileName, e);
                     }
                 })
-                .toList();
+                .collect(Collectors.toList());
 
-        // Upload the actual file
         documentRepository.saveAll(documents);
         return String.join(", ", uploadedFiles);
     }
 
     @Override
-    public void deleteRFPDocument(Integer documentId) {
-        RequestForProposalDocument document = findDocumentById(documentId);
+    public void deleteRFPDocument(final Integer documentId) {
+        final RequestForProposalDocument document = findDocumentById(documentId);
         try {
             documentRepository.delete(document);
             documentHelper.deleteRFPDocument(document.getFilePath());
         } catch (Exception e) {
             log.error("Error deleting file: {}", document.getFileName(), e);
-            throw new AppException(INTERNAL_ERROR, "Failed to delete file: " + document.getFileName());
+            throw new AppException(INTERNAL_ERROR, "Failed to delete file: " + document.getFileName(), e);
         }
     }
 
     @Override
-    public void replaceRPFDocument(MultipartFile file, Integer documentId, boolean isBlueBook, boolean isAdmin) {
-        String[] fileValidationMessage = validateMultipartFile(file);
-        if (ObjectUtils.isNotEmpty(fileValidationMessage)) {
+    public void replaceRPFDocument(final MultipartFile file, final Integer documentId, final boolean isBlueBook, final boolean isAdmin) {
+        final String[] fileValidationMessage = validateMultipartFile(file);
+        if (fileValidationMessage.length > 0) {
             throw new AppException(INVALID_FILE, fileValidationMessage);
         }
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+        final String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 
-        RequestForProposalDocument document = findDocumentById(documentId);
-        String fileKey = "";
+        final RequestForProposalDocument document = findDocumentById(documentId);
+        final String fileKey;
         if (isBlueBook && isAdmin) {
             fileKey = documentHelper.getFilePathForAdminBlueBook(fileName);
         } else {
@@ -143,23 +140,37 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
             document.setFileName(fileName);
             documentRepository.save(document);
         } catch (IOException e) {
-            throw new AppException(INTERNAL_ERROR, "Facing issue while replacing the file " + document.getFileName());
+            log.error("Error replacing file {}", document.getFileName(), e);
+            throw new AppException(INTERNAL_ERROR, "Facing issue while replacing the file " + document.getFileName(), e);
         }
     }
 
     @Override
-    public ProposalDocumentResponse getDocumentByRequestProposalId(Integer proposalId) {
-        List<RequestForProposalDocument> proposalDocuments = documentRepository.findAll(
+    public ProposalDocumentResponse getDocumentByRequestProposalId(final Integer proposalId) {
+        final List<RequestForProposalDocument> proposalDocuments = documentRepository.findAll(
                 findRFPByProposalSpecification(proposalId),
                 Sort.by(Sort.Direction.DESC, "created")
         );
 
-        List<RequestForProposalDocument> uploadedByAdmin = getAllBluePrintDocumentUploadedByAdmin();
+        final List<RequestForProposalDocument> uploadedByAdmin = getAllBluePrintDocumentUploadedByAdmin();
 
-        List<RequestForProposalDocument> blueBooks = Stream.concat(proposalDocuments.stream().filter(document -> document.getFilePath().contains("bluebook")).peek(requestForProposalDocument -> requestForProposalDocument.setRole("Contributor")), uploadedByAdmin.stream().peek(requestForProposalDocument -> requestForProposalDocument.setRole("Admin"))).toList();
+        final List<RequestForProposalDocument> blueBooks = Stream.concat(
+                proposalDocuments.stream()
+                        .filter(document -> document.getFilePath() != null && document.getFilePath().toLowerCase().contains("bluebook"))
+                        .peek(requestForProposalDocument -> requestForProposalDocument.setRole("Contributor")),
+                uploadedByAdmin.stream()
+                        .peek(requestForProposalDocument -> requestForProposalDocument.setRole("Admin"))
+        ).collect(Collectors.toList());
+
+        final List<RequestForProposalDocument> nonBlueBookDocuments = proposalDocuments.stream()
+                .filter(document -> document.getFilePath() == null || !document.getFilePath().toLowerCase().contains("bluebook"))
+                .peek(requestForProposalDocument -> requestForProposalDocument.setRole("Contributor"))
+                .collect(Collectors.toList());
+
         return ProposalDocumentResponse.builder()
-                .uploadedDocument(proposalDocuments.stream().filter(document -> !document.getFilePath().contains("bluebook")).peek(requestForProposalDocument -> requestForProposalDocument.setRole("Contributor")).toList())
-                .blueBookDocument(blueBooks).build();
+                .uploadedDocument(nonBlueBookDocuments)
+                .blueBookDocument(blueBooks)
+                .build();
     }
 
     @Override
@@ -171,98 +182,101 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
     }
 
     @Override
-    public void replaceAdminBlueBookDocument(MultipartFile file, Integer documentId) {
+    public void replaceAdminBlueBookDocument(final MultipartFile file, final Integer documentId) {
         replaceRPFDocument(file, documentId, true, true);
     }
 
     @Override
-    public String uploadBlueBookRFPDocument(MultipartFile[] files, Integer proposalId, boolean isBlueBook) {
+    public String uploadBlueBookRFPDocument(final MultipartFile[] files, final Integer proposalId, final boolean isBlueBook) {
         return uploadRFPDocument(files, proposalId, isBlueBook, false);
     }
 
     @Override
-    public String uploadAdminBlueBookRFPDocument(MultipartFile[] files, boolean isBlueBook, boolean isAdmin) {
+    public String uploadAdminBlueBookRFPDocument(final MultipartFile[] files, final boolean isBlueBook, final boolean isAdmin) {
         return uploadRFPDocument(files, null, isBlueBook, true);
     }
 
     @Override
-    public void copyDocuments(String solicitationId, List<Integer> documentIds) {
-        List<RequestForProposalDocument> documents = documentRepository.findAllById(documentIds);
-        Map<String, String> fileNameAndFilePathMap = documents.stream().collect(Collectors.toMap(RequestForProposalDocument::getFileName, RequestForProposalDocument::getFilePath));
-        //Delete files from the @solicitationId folder
+    public void copyDocuments(final String solicitationId, final List<Integer> documentIds) {
+        final List<RequestForProposalDocument> documents = documentRepository.findAllById(documentIds);
+        final Map<String, String> fileNameAndFilePathMap = documents.stream()
+                .collect(Collectors.toMap(RequestForProposalDocument::getFileName, RequestForProposalDocument::getFilePath));
         documentHelper.deleteFilesInFolder(solicitationId);
-        //Copy file from source to destination.
         documentHelper.copySpecificDocuments(fileNameAndFilePathMap, solicitationId);
     }
 
     @Override
-    public RequestForProposalDocument getDocumentById(Integer documentId) {
+    public RequestForProposalDocument getDocumentById(final Integer documentId) {
         return findDocumentById(documentId);
     }
 
-    public ResponseInputStream<GetObjectResponse> getS3Document(String filePath) {
+    public ResponseInputStream<GetObjectResponse> getS3Document(final String filePath) {
+        if (filePath == null) {
+            throw new AppException(INTERNAL_ERROR, "File path must not be null");
+        }
         return documentHelper.getDocumentFromS3(filePath);
     }
 
-
-    public String resolveContentType(String fileName) {
-        if (fileName == null) return "application/octet-stream";
-
-        fileName = fileName.toLowerCase();
-
-        if (fileName.endsWith(".pdf")) {
+    public String resolveContentType(final String fileName) {
+        if (fileName == null) {
+            return "application/octet-stream";
+        }
+        final String lowerFileName = fileName.toLowerCase();
+        if (lowerFileName.endsWith(".pdf")) {
             return "application/pdf";
-        } else if (fileName.endsWith(".docx")) {
+        } else if (lowerFileName.endsWith(".docx")) {
             return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        } else if (fileName.endsWith(".doc")) {
+        } else if (lowerFileName.endsWith(".doc")) {
             return "application/msword";
-        } else if (fileName.endsWith(".txt")) {
+        } else if (lowerFileName.endsWith(".txt")) {
             return "text/plain";
-        } else if (fileName.endsWith(".xls")) {
+        } else if (lowerFileName.endsWith(".xls")) {
             return "application/vnd.ms-excel";
-        } else if (fileName.endsWith(".xlsx")) {
+        } else if (lowerFileName.endsWith(".xlsx")) {
             return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         } else {
             return "application/octet-stream"; // fallback
         }
     }
 
-    //private method region start
+    // Private helper methods
 
-    private String[] validateMultipartFile(MultipartFile file) {
-        List<String> errors = new ArrayList<>();
+    private String[] validateMultipartFile(final MultipartFile file) {
+        final List<String> errors = new ArrayList<>();
         if (file == null || file.isEmpty()) {
             log.warn("File is empty or null.");
             errors.add("File is empty. Please upload a valid file.");
+            return errors.toArray(new String[0]);
         }
 
-        String filename = StringUtils.cleanPath(file.getOriginalFilename());
+        final String filename = StringUtils.cleanPath(file.getOriginalFilename());
         if (filename.contains("..")) {
             log.warn("Invalid filename: {}", filename);
             errors.add("Invalid filename.");
         }
 
-        String fileExtension = getFileExtension(filename);
+        final String fileExtension = getFileExtension(filename);
         if (!ALLOWED_EXTENSIONS.contains(fileExtension.toLowerCase())) {
             log.warn("Invalid file format: {}", fileExtension);
             errors.add("Invalid file format. Only PDF, DOCX, DOC, XLS, XLSX, and TXT are allowed.");
         }
-        return errors.stream().toArray(String[]::new);
+        return errors.toArray(new String[0]);
     }
 
-    private String getFileExtension(String filename) {
-        return filename.contains(".") ? filename.substring(filename.lastIndexOf(".") + 1).toLowerCase() : Strings.EMPTY;
+    private String getFileExtension(final String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return "";
+        }
+        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }
 
-    private RequestForProposalDocument findDocumentById(Integer documentId) {
+    private RequestForProposalDocument findDocumentById(final Integer documentId) {
         return documentRepository.findById(documentId)
                 .orElseThrow(() -> new AppException(RFP_DOCUMENT_NOT_FOUND));
     }
 
-    private RequestForProposal findProposalById(Integer proposalId) {
+    private RequestForProposal findProposalById(final Integer proposalId) {
         return requestForProposalRepository.findById(proposalId)
                 .orElseThrow(() -> new AppException(RFP_NOT_FOUND));
     }
-
-    //private method region end.
 }
