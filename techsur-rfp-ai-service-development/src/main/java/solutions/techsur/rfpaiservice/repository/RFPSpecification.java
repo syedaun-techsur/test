@@ -1,5 +1,6 @@
 package solutions.techsur.rfpaiservice.repository;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -16,20 +17,33 @@ import java.util.List;
 @Slf4j
 public class RFPSpecification {
 
-
     public static Specification<RequestForProposal> multiFieldSearch(CommonFilter filter) {
         return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.or(criteriaBuilder.like(root.get("title"), "%" + filter.getSearch().toLowerCase() + "%")));
-            predicates.add(criteriaBuilder.like(root.get("description"), "%" + filter.getSearch().toLowerCase() + "%"));
-            predicates.add(criteriaBuilder.like(root.get("solicitationId"), "%" + filter.getSearch().toLowerCase() + "%"));
+            String searchTerm = filter.getSearch();
+            if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                return criteriaBuilder.conjunction(); // Return always true predicate if no search term
+            }
+            String loweredSearchTerm = searchTerm.toLowerCase();
 
+            List<Predicate> predicates = new ArrayList<>();
+            
+            // Case-insensitive like predicates for string fields
+            predicates.add(criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("title")), "%" + loweredSearchTerm + "%"));
+            predicates.add(criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("description")), "%" + loweredSearchTerm + "%"));
+            predicates.add(criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("solicitationId")), "%" + loweredSearchTerm + "%"));
+
+            // Try parsing the search term as date and add equality predicate if valid
             try {
-                LocalDate date = LocalDate.parse(filter.getSearch());
+                LocalDate date = LocalDate.parse(searchTerm);
                 predicates.add(criteriaBuilder.equal(root.get("deadline"), date));
             } catch (Exception ex) {
-                log.warn("Error while parsing string to date");
+                log.warn("Error while parsing string to date: {}", ex.getMessage());
             }
+
+            // Combine predicates with OR operator
             return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
         };
     }
