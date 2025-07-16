@@ -34,7 +34,7 @@ public class RequestForProposalControllerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        MockitoAnnotations.openMocks(this); // If environment requires, consider initMocks(this)
     }
 
     @Test
@@ -48,13 +48,14 @@ public class RequestForProposalControllerTest {
         ResponseEntity<CreationDTO> response = proposalController.createProposal(request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody(), "Response body should not be null");
         assertEquals(1, response.getBody().getId());
     }
 
     @Test
     void testGetProposals() {
         ProposalFilter filter = new ProposalFilter();
-        Pageable pageable = mock(Pageable.class);
+        Pageable pageable = Pageable.unpaged(); // Better practice for tests here
         Page<RequestForProposal> page = new PageImpl<>(Collections.emptyList());
 
         when(proposalService.getProposals(filter, pageable)).thenReturn(page);
@@ -62,7 +63,7 @@ public class RequestForProposalControllerTest {
         ResponseEntity<Page<RequestForProposal>> response = proposalController.getProposals(filter, pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertNotNull(response.getBody(), "Response body should not be null");
     }
 
     @Test
@@ -77,6 +78,7 @@ public class RequestForProposalControllerTest {
         ResponseEntity<CreationDTO> response = proposalController.createResponseOutline(proposalId, request);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody(), "Response body should not be null");
         assertEquals(2, response.getBody().getId());
     }
 
@@ -90,7 +92,7 @@ public class RequestForProposalControllerTest {
         ResponseEntity<OutlineResponse> response = proposalController.getResponseOutline(proposalId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertNotNull(response.getBody(), "Response body should not be null");
     }
 
     @Test
