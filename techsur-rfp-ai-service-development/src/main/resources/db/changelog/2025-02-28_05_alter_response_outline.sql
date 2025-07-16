@@ -1,0 +1,17 @@
+ALTER TABLE rfpaiservice.response_outline
+DROP COLUMN created_at;
+
+ALTER TABLE rfpaiservice.response_outline_aud
+DROP COLUMN created_at;
+
+ALTER TABLE rfpaiservice.response_outline
+ADD COLUMN created_by_name VARCHAR(100) NOT NULL DEFAULT 'System',
+ADD COLUMN updated_by_name VARCHAR(100) NOT NULL DEFAULT 'System',
+ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE rfpaiservice.response_outline_aud
+ADD COLUMN created_by_name VARCHAR(100) NOT NULL DEFAULT 'System',
+ADD COLUMN updated_by_name VARCHAR(100) NOT NULL DEFAULT 'System',
+ADD COLUMN created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;

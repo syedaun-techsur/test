@@ -1,0 +1,30 @@
+package solutions.techsur.rfpaiservice.dto;
+
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import solutions.techsur.common.microservice.dto.Validation;
+import solutions.techsur.rfpaiservice.entity.RequestForProposal;
+
+import java.time.LocalDate;
+
+@Setter
+@Getter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProposalRequest {
+    @NotBlank(groups = Validation.CreateValidation.class, message = "Title is required")
+    private String title;
+    @NotBlank(groups = Validation.CreateValidation.class, message = "Description is required")
+    private String description;
+    @NotNull(groups = Validation.CreateValidation.class, message = "Deadline cannot be null")
+    private LocalDate deadline;
+    @NotBlank(groups = Validation.CreateValidation.class, message = "Solicitation id is required")
+    private String solicitationId;
+
+    @Builder.Default
+    private RequestForProposal.Status status = RequestForProposal.Status.UPLOADED;
+}

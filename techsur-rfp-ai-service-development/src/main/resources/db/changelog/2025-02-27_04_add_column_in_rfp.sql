@@ -1,0 +1,6 @@
+
+ALTER TABLE rfpaiservice.rfps 
+ADD COLUMN dead_line DATE NOT NULL DEFAULT CURRENT_DATE + INTERVAL '30 days';
+
+ALTER TABLE rfpaiservice.rfps_aud
+ADD COLUMN dead_line DATE NOT NULL DEFAULT CURRENT_DATE + INTERVAL '30 days';

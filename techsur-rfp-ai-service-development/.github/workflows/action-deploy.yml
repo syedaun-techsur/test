@@ -1,0 +1,33 @@
+# .github/workflows/main.yml in APP_DEPLOYMENTS repository
+name: Main Workflow -- GRADLE
+
+on:
+  push:
+    branches:
+      - main
+      - 'development'
+      - 'hotfix'
+    tags:
+      - 'v*'
+      - '*'
+  workflow_dispatch:
+    inputs:
+      project-type:
+        description: 'Specify the type of project (none, gradle, javascript, ruby, maven, , more ...)'
+        required: true
+        default: 'gradle'
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  call-sub-workflow:
+    uses: techsur-solutions/techsur-ovh-deployments/.github/workflows/main.yml@main
+    with:
+      project-type: 'gradle'
+      repository: ${{ github.repository }}
+      branch-name: ${{ github.ref }}
+      docker-context: '.'
+      deployment-chart: 'rfpai-service'
+    secrets: inherit
