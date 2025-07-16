@@ -1,6 +1,7 @@
 package solutions.techsur.common.microservice.config;
 
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,12 @@ public class KeyClockBeanConfig {
 
     @Bean
     public Keycloak keycloak() {
-        return Keycloak.getInstance(serverUrl, masterRealm, keycloakUser, keycloakPassword, ADMIN_CLI);
+        return KeycloakBuilder.builder()
+                .serverUrl(serverUrl)
+                .realm(masterRealm)
+                .clientId(ADMIN_CLI)
+                .username(keycloakUser)
+                .password(keycloakPassword)
+                .build();
     }
 }
