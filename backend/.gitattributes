@@ -1,2 +1,12 @@
+# Ensure maven wrapper shell script uses LF on all platforms
 /mvnw text eol=lf
+
+# Ensure maven wrapper Windows batch script files use CRLF
+/mvnw.cmd text eol=crlf
 *.cmd text eol=crlf
+
+# Normalize shell scripts to LF, if any
+*.sh text eol=lf
+
+# Auto-detect text files and normalize line endings
+* text=auto
