@@ -34,15 +34,16 @@ public class RequestForProposalDocumentController {
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
-    @Operation(summary = "Upload multiple documents", description = "Uploads an array of files to an S3 bucket,  Requires 'contributor' authority.",
-            security = {@SecurityRequirement(name = "bearerToken")})
+    @Operation(summary = "Upload multiple documents",
+        description = "Uploads an array of files to an S3 bucket, Requires 'contributor' authority.",
+        security = {@SecurityRequirement(name = "bearerToken")})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "File uploaded successfully."),
             @ApiResponse(responseCode = "400", description = "Unable to upload file"),
             @ApiResponse(responseCode = "415", description = "Unsupported Media Type"),
             @ApiResponse(responseCode = "401", description = "User is not authorized")
     })
-    public ResponseEntity<String> uploadRFPDocument(
+    public ResponseEntity<?> uploadRFPDocument(
             @RequestParam("files") @Parameter(
                     description = "File to be uploaded", required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
@@ -51,7 +52,8 @@ public class RequestForProposalDocumentController {
                     description = "Proposal ID to which the document will be attached.", required = true)
             Integer proposalId) {
 
-        return ResponseEntity.ok(documentService.uploadRFPDocument(files, proposalId, false, false));
+        String response = documentService.uploadRFPDocument(files, proposalId, false, false);
+        return ResponseEntity.status(201).body(response);
     }
 
     @DeleteMapping("/delete/{documentId}")
@@ -70,9 +72,11 @@ public class RequestForProposalDocumentController {
     @PutMapping(value = "/replace", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Replace an RFP document",
             description = "Replaces an existing RFP document with a new file based on the provided document ID.")
-    @ApiResponse(responseCode = "204", description = "Document replaced successfully")
-    @ApiResponse(responseCode = "400", description = "Invalid file format or missing file")
-    @ApiResponse(responseCode = "404", description = "Document not found")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Document replaced successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid file format or missing file"),
+            @ApiResponse(responseCode = "404", description = "Document not found")
+    })
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     public ResponseEntity<Void> replaceDocument(
             @RequestParam("documentId") @Parameter(
@@ -84,7 +88,7 @@ public class RequestForProposalDocumentController {
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             MultipartFile file,
             @RequestParam("isBlueBook") @Parameter(
-                    description = "Which file to be replaced(Proposal document/Blue book)", required = true)
+                    description = "Which file to be replaced (Proposal document/Blue book)", required = true)
             boolean isBlueBook) {
         documentService.replaceRPFDocument(file, documentId, isBlueBook, false);
         return ResponseEntity.noContent().build();
@@ -95,73 +99,85 @@ public class RequestForProposalDocumentController {
             summary = "Get Proposal Document",
             description = "Fetches the document associated with a specific proposal ID."
     )
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved the document")
-    @ApiResponse(responseCode = "404", description = "Proposal document not found")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved the document"),
+            @ApiResponse(responseCode = "404", description = "Proposal document not found")
+    })
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     public ResponseEntity<ProposalDocumentResponse> getDocumentByRequestProposalId(
             @Parameter(description = "ID of the proposal to fetch the document for", required = true, example = "123")
             @PathVariable Integer proposalId) {
 
-        return ResponseEntity.ok(documentService.getDocumentByRequestProposalId(proposalId));
+        ProposalDocumentResponse response = documentService.getDocumentByRequestProposalId(proposalId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping(value = "/uploadbluebook", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
-    @Operation(summary = "Upload multiple documents", description = "Uploads an array of files to an S3 bucket")
+    @Operation(summary = "Upload multiple Blue Book documents",
+            description = "Uploads an array of files to an S3 bucket")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "File uploaded successfully."),
             @ApiResponse(responseCode = "400", description = "Unable to upload file"),
             @ApiResponse(responseCode = "415", description = "Unsupported Media Type"),
             @ApiResponse(responseCode = "401", description = "User is not authorized")
     })
-    public ResponseEntity<String> uploadBlueBookRFPDocument(
+    public ResponseEntity<?> uploadBlueBookRFPDocument(
             @RequestParam("files") @Parameter(
-                    description = "File to be uploaded", required = true,
+                    description = "Blue Book file to be uploaded", required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             MultipartFile[] files,
             @RequestParam("proposalId") @Parameter(
                     description = "Proposal ID to which the blue book document will be attached.", required = true)
             Integer proposalId) {
 
-        return ResponseEntity.ok(documentService.uploadBlueBookRFPDocument(files, proposalId, true));
+        String response = documentService.uploadBlueBookRFPDocument(files, proposalId, true);
+        return ResponseEntity.status(201).body(response);
     }
 
     @PostMapping(value = "/admin/uploadblueprintdoc", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyAuthority(@properties.getDeleteProposal())")
-    @Operation(summary = "Upload multiple documents", description = "Uploads an array of files to an S3 bucket")
+    @Operation(summary = "Upload multiple blueprint documents by admin",
+            description = "Uploads an array of files to an S3 bucket")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "File uploaded successfully."),
             @ApiResponse(responseCode = "400", description = "Unable to upload file"),
             @ApiResponse(responseCode = "415", description = "Unsupported Media Type"),
             @ApiResponse(responseCode = "401", description = "User is not authorized")
     })
-    public ResponseEntity<String> uploadAdminBlueBookRFPDocument(
+    public ResponseEntity<?> uploadAdminBlueBookRFPDocument(
             @RequestParam("files") @Parameter(
-                    description = "File to be uploaded", required = true,
+                    description = "Blueprint files to be uploaded", required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             MultipartFile[] files) {
 
-        return ResponseEntity.ok(documentService.uploadAdminBlueBookRFPDocument(files, true, true));
+        String response = documentService.uploadAdminBlueBookRFPDocument(files, true, true);
+        return ResponseEntity.status(201).body(response);
     }
 
     @GetMapping("/admin/getblueprintdocs")
     @Operation(
-            summary = "Get Proposal Document uploaded by Admin",
-            description = "Fetches the document associated with admin."
+            summary = "Get Blueprint Documents uploaded by Admin",
+            description = "Fetches the documents associated with admin."
     )
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved the document")
-    @ApiResponse(responseCode = "404", description = "Proposal document not found")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved the documents"),
+            @ApiResponse(responseCode = "404", description = "Documents not found")
+    })
     @PreAuthorize("hasAnyAuthority(@properties.getDeleteProposal())")
     public ResponseEntity<List<RequestForProposalDocument>> getAllBluePrintDocumentUploadedByAdmin() {
-        return ResponseEntity.ok(documentService.getAllBluePrintDocumentUploadedByAdmin());
+        List<RequestForProposalDocument> documents = documentService.getAllBluePrintDocumentUploadedByAdmin();
+        return ResponseEntity.ok(documents);
     }
 
     @PutMapping(value = "/admin/replaceblueprintdocs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Replace an Blueprint document uploaded by admin",
+    @Operation(summary = "Replace a Blueprint document uploaded by admin",
             description = "Replaces an existing blueprint document with a new file based on the provided document ID.")
-    @ApiResponse(responseCode = "204", description = "Document replaced successfully")
-    @ApiResponse(responseCode = "400", description = "Invalid file format or missing file")
-    @ApiResponse(responseCode = "404", description = "Document not found")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Document replaced successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid file format or missing file"),
+            @ApiResponse(responseCode = "404", description = "Document not found")
+    })
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     public ResponseEntity<Void> replaceAdminBlueBookDocument(
             @RequestParam("documentId") @Parameter(
@@ -210,28 +226,23 @@ public class RequestForProposalDocumentController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Document streamed successfully.",
-                    content = @Content(mediaType = "application/octet-stream")),
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)),
             @ApiResponse(responseCode = "404", description = "Document not found"),
             @ApiResponse(responseCode = "401", description = "User is not authorized")
     })
-    public ResponseEntity<?> viewDocument(
+    public ResponseEntity<InputStreamResource> viewDocument(
             @PathVariable("documentId") @Parameter(description = "ID of the document to view", required = true)
             Integer documentId,
             @RequestParam(required = false, defaultValue = "false") boolean download)  {
 
         RequestForProposalDocument document = documentService.getDocumentById(documentId);
-
         ResponseInputStream<GetObjectResponse> s3Stream = documentService.getS3Document(document.getFilePath());
-
         String fileName = document.getFileName();
         String contentType = documentService.resolveContentType(fileName);
 
-        var headers = new HttpHeaders();
-        if (download) {
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + document.getFileName() + "\"");
-        } else {
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + document.getFileName() + "\"");
-        }
+        HttpHeaders headers = new HttpHeaders();
+        String dispositionType = download ? "attachment" : "inline";
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, dispositionType + "; filename=\"" + fileName + "\"");
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
