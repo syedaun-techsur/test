@@ -1,18 +1,18 @@
 package solutions.techsur.rfpaiservice.dto;
 
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import solutions.techsur.common.microservice.dto.Validation;
 import solutions.techsur.rfpaiservice.entity.RequestForProposal;
 
 import java.time.LocalDate;
 
-@Setter
-@Getter
-@SuperBuilder
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProposalRequest {
