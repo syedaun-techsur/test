@@ -1,12 +1,10 @@
 package solutions.techsur.common.microservice.config;
 
-import liquibase.change.DatabaseChange;
 import liquibase.integration.spring.SpringLiquibase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AbstractDependsOnBeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,7 +23,7 @@ import java.sql.Statement;
 // https://stackoverflow.com/questions/52517529/how-to-create-schema-in-postgres-db-before-liquibase-start-to-work
 @Slf4j
 @Configuration
-@ConditionalOnClass({ SpringLiquibase.class, DatabaseChange.class })
+@ConditionalOnClass({ SpringLiquibase.class })
 @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", matchIfMissing = true)
 @AutoConfigureAfter({ DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
 @Import({ LiquibaseSchemaInit.SpringLiquibaseDependsOnPostProcessor.class })
@@ -46,20 +44,22 @@ public class LiquibaseSchemaInit {
 		@Override
 		public void afterPropertiesSet() {
 			try (Connection conn = dataSource.getConnection(); Statement statement = conn.createStatement()) {
-				log.info("Going to create DB schema '{}' if not exists.", schemaName);
+				log.info("Attempting to create DB schema '{}' if it does not exist.", schemaName);
 				String safeSchemaName = schemaName.replace("\"", "");
-				String sql = String.format("create schema if not exists \"%s\"", safeSchemaName);
+				String sql = String.format("CREATE SCHEMA IF NOT EXISTS \"%s\"", safeSchemaName);
 				statement.execute(sql);
+				log.info("DB schema '{}' verified or created successfully.", schemaName);
 			} catch (SQLException e) {
+				log.error("Failed to create schema '{}'", schemaName, e);
 				throw new RuntimeException("Failed to create schema '" + schemaName + "'", e);
 			}
 		}
 	}
 
 	@ConditionalOnBean(SchemaInitBean.class)
-	static class SpringLiquibaseDependsOnPostProcessor extends AbstractDependsOnBeanFactoryPostProcessor {
+	static class SpringLiquibaseDependsOnPostProcessor extends org.springframework.boot.autoconfigure.AbstractDependsOnBeanFactoryPostProcessor {
 
-		SpringLiquibaseDependsOnPostProcessor() {
+		public SpringLiquibaseDependsOnPostProcessor() {
 			// Configure the 3rd party SpringLiquibase bean to depend on our SchemaInitBean
 			super(SpringLiquibase.class, SchemaInitBean.class);
 		}
