@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import solutions.techsur.rfpaiservice.controller.RequestForProposalResponsesController;
 import solutions.techsur.rfpaiservice.dto.CreationDTO;
@@ -14,7 +15,9 @@ import solutions.techsur.rfpaiservice.entity.RequestForProposalResponses;
 import solutions.techsur.rfpaiservice.service.RequestForProposalResponsesService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +45,8 @@ public class RequestForProposalResponsesControllerTest {
 
         ResponseEntity<CreationDTO> response = controller.createResponses(request);
 
-        assertEquals(201, response.getStatusCodeValue());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody(), "Response body should not be null");
         assertEquals(1, response.getBody().getId());
     }
 
@@ -52,7 +56,7 @@ public class RequestForProposalResponsesControllerTest {
 
         ResponseEntity<Void> response = controller.updateResponses(request, 1);
 
-        assertEquals(204, response.getStatusCodeValue());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(service, times(1)).updateResponses(any(ResponsesRequest.class), eq(1));
     }
 
@@ -62,7 +66,8 @@ public class RequestForProposalResponsesControllerTest {
 
         ResponseEntity<RequestForProposalResponses> response = controller.getResponses(1);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody(), "Response body should not be null");
         assertEquals(1, response.getBody().getId());
     }
 }
