@@ -1,10 +1,27 @@
+# General ignores
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
+
+# Keep build artifacts inside source folders (if any)
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# Ignore build directories from other build systems (in case used)
+build/
+
+# Keep build artifacts inside source folders (if any)
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Temporary files and logs
+*.log
+*.tmp
+
+# macOS system files
+.DS_Store
+
+### STS (Spring Tool Suite) ###
 .apt_generated
 .classpath
 .factorypath
@@ -25,9 +42,6 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
