@@ -1,7 +1,19 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "paths": {
+      "~src/*": ["./src/*"],
+      "~assets/*": ["./src/assets/*"],
+      "~pages/*": ["./src/pages/*"],
+      "~public/*": ["./src/public/*"]
+    },
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2015",
+    "lib": ["ES2015", "DOM"]
+  },
+  "include": ["vite.config.ts", "src", "scripts", "plugins"]
 }
