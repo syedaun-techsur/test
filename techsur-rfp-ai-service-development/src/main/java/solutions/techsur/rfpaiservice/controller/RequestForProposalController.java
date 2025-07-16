@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ContentDisposition;
 import solutions.techsur.common.microservice.dto.Validation;
 import solutions.techsur.rfpaiservice.dto.*;
 import solutions.techsur.rfpaiservice.entity.RequestForProposal;
@@ -28,6 +29,7 @@ import solutions.techsur.rfpaiservice.service.impl.RequestForProposalServiceImpl
 @RestController
 @RequestMapping("/api/v1/proposal")
 @AllArgsConstructor
+@Validated
 @Tag(name = "Proposals & Outline", description = "API for managing Request for Proposals and outline")
 public class RequestForProposalController {
 
@@ -35,15 +37,21 @@ public class RequestForProposalController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
-    @Operation(summary = "Create a new proposal", description = "Creates a new proposal and returns its ID.")
+    @Operation(
+            summary = "Create a new proposal",
+            description = "Creates a new proposal and returns its ID."
+    )
     @ApiResponse(responseCode = "201", description = "Proposal created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request payload")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    public ResponseEntity<CreationDTO> createProposal(@Validated(Validation.CreateValidation.class) @RequestBody ProposalRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(CreationDTO.builder()
-                .id(proposalService.createRequestForProposal(request)
-                        .getId()).build());
+    public ResponseEntity<CreationDTO> createProposal(
+            @Validated(Validation.CreateValidation.class) @RequestBody ProposalRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                CreationDTO.builder()
+                        .id(proposalService.createRequestForProposal(request).getId())
+                        .build()
+        );
     }
 
     @GetMapping("/list")
@@ -57,11 +65,14 @@ public class RequestForProposalController {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public ResponseEntity<Page<RequestForProposal>> getProposals(ProposalFilter filter, @ParameterObject  @SortDefault(sort = "created", direction = Sort.Direction.DESC) Pageable pageable) {
+    public ResponseEntity<Page<RequestForProposal>> getProposals(
+            ProposalFilter filter,
+            @ParameterObject @SortDefault(sort = "created", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(proposalService.getProposals(filter, pageable));
     }
 
     @PostMapping("/{proposalId}/outline")
+    @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
             summary = "Create a new response outline",
             description = "Creates a new response outline and returns its ID.",
@@ -71,21 +82,25 @@ public class RequestForProposalController {
                     content = @Content(schema = @Schema(implementation = OutlineResponse.class))
             )
     )
-    @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @ApiResponse(responseCode = "201", description = "Response outline created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request payload")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    public ResponseEntity<CreationDTO> createResponseOutline(@PathVariable Integer proposalId, @Valid @RequestBody OutlineResponse request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(CreationDTO.builder()
-                .id(proposalService.createResponseOutline(request, proposalId).getId()).build());
+    public ResponseEntity<CreationDTO> createResponseOutline(
+            @PathVariable Integer proposalId,
+            @Valid @RequestBody OutlineResponse request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                CreationDTO.builder()
+                        .id(proposalService.createResponseOutline(request, proposalId).getId())
+                        .build()
+        );
     }
 
     @GetMapping(value = "/{proposalId}/outline", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
-            summary = "Get Response outline",
-            description = "Retrieves a Response outline of proposals based on the given proposal id parameters.",
+            summary = "Get response outline",
+            description = "Retrieves a response outline of proposals based on the given proposal ID parameters.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful retrieval of response outline"),
                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
@@ -99,15 +114,15 @@ public class RequestForProposalController {
     @PutMapping("/{proposalId}/outline")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
-            summary = "Update a Response Outline",
-            description = "Updates an existing Response Outline section , subsection by proposal ID."
+            summary = "Update a response outline",
+            description = "Updates an existing response outline section or subsection by proposal ID."
     )
     @ApiResponse(responseCode = "204", description = "Response outline updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request data")
     @ApiResponse(responseCode = "404", description = "Response outline not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public ResponseEntity<Void> updateResponseOutline(
-            @RequestBody @Parameter(description = "Updated response outline details")  OutlineResponse request,
+            @RequestBody @Parameter(description = "Updated response outline details") OutlineResponse request,
             @PathVariable @Parameter(description = "ID of the response outline to update") Integer proposalId) {
         proposalService.updateResponseOutline(request, proposalId);
         return ResponseEntity.noContent().build();
@@ -116,7 +131,7 @@ public class RequestForProposalController {
     @DeleteMapping("/{proposalId}")
     @PreAuthorize("hasAnyAuthority(@properties.getDeleteProposal())")
     @Operation(
-            summary = "Delete a Proposal",
+            summary = "Delete a proposal",
             description = "Deletes a request for a proposal based on its ID.",
             tags = {"Proposal"}
     )
@@ -125,9 +140,7 @@ public class RequestForProposalController {
     @ApiResponse(responseCode = "404", description = "Proposal not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public ResponseEntity<Void> deleteRequestForProposal(
-            @PathVariable
-            @Parameter(description = "ID of the proposal to delete", example = "123")
-            Integer proposalId) {
+            @PathVariable @Parameter(description = "ID of the proposal to delete", example = "123") Integer proposalId) {
         proposalService.deleteRequestForProposal(proposalId);
         return ResponseEntity.noContent().build();
     }
@@ -135,18 +148,16 @@ public class RequestForProposalController {
     @DeleteMapping("/{outlineId}/outline")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
-            summary = "Delete a outline",
-            description = "Deletes a request for a proposal based on its ID.",
+            summary = "Delete an outline",
+            description = "Deletes an outline based on its ID.",
             tags = {"Proposal"}
     )
     @ApiResponse(responseCode = "204", description = "Outline deleted successfully")
-    @ApiResponse(responseCode = "400", description = "Invalid Outline ID")
+    @ApiResponse(responseCode = "400", description = "Invalid outline ID")
     @ApiResponse(responseCode = "404", description = "Outline not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public ResponseEntity<Void> deleteResponseOutline(
-            @PathVariable
-            @Parameter(description = "ID of the outline to delete", example = "123")
-            Integer outlineId) {
+            @PathVariable @Parameter(description = "ID of the outline to delete", example = "123") Integer outlineId) {
         proposalService.deleteResponseOutline(outlineId);
         return ResponseEntity.noContent().build();
     }
@@ -154,8 +165,8 @@ public class RequestForProposalController {
     @GetMapping("/{proposalId}")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
-            summary = "Get Request for proposal by ID",
-            description = "Retrieves a proposal based on the given rfp ID.",
+            summary = "Get request for proposal by ID",
+            description = "Retrieves a proposal based on the given RFP ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful retrieval of proposal"),
                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
@@ -169,17 +180,17 @@ public class RequestForProposalController {
     @PutMapping("/{proposalId}")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
-            summary = "Update a Request For Proposal",
-            description = "Updates an existing Request For Proposal by its ID.",
+            summary = "Update a request for proposal",
+            description = "Updates an existing request for proposal by its ID.",
             tags = {"Request For Proposal"}
     )
-    @ApiResponse(responseCode = "204", description = "Request For Proposal updated successfully")
+    @ApiResponse(responseCode = "204", description = "Request for proposal updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request data")
     @ApiResponse(responseCode = "404", description = "Response outline not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
     public ResponseEntity<Void> updateRequestForProposal(
-            @RequestBody @Parameter(description = "Updated Request For Proposal details") ProposalRequest request,
-            @PathVariable @Parameter(description = "ID of the Request For Proposal to update") Integer proposalId) {
+            @RequestBody @Parameter(description = "Updated request for proposal details") ProposalRequest request,
+            @PathVariable @Parameter(description = "ID of the request for proposal to update") Integer proposalId) {
         proposalService.updateRequestForProposal(request, proposalId);
         return ResponseEntity.noContent().build();
     }
@@ -191,7 +202,7 @@ public class RequestForProposalController {
                     @ApiResponse(responseCode = "200", description = "Successfully generated the outlines DOCX file",
                             content = @Content(mediaType = "application/octet-stream")),
                     @ApiResponse(responseCode = "404", description = "Proposal not found"),
-                    @ApiResponse(responseCode = "500", description = "Internal Server Error")
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
     @GetMapping(value = "/{proposalId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -200,7 +211,7 @@ public class RequestForProposalController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", "Generated_Document.docx");
+        headers.setContentDisposition(ContentDisposition.attachment().filename("Generated_Document.docx").build());
 
         return ResponseEntity.ok()
                 .headers(headers)
@@ -210,8 +221,8 @@ public class RequestForProposalController {
     @PutMapping("/{outlineId}/single/outline")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
-            summary = "Update a Response Outline",
-            description = "Updates an existing Response Outline by its ID."
+            summary = "Update a response outline",
+            description = "Updates an existing response outline by its ID."
     )
     @ApiResponse(responseCode = "204", description = "Response outline updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request data")
