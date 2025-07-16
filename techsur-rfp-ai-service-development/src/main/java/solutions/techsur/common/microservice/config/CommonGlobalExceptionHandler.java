@@ -17,6 +17,7 @@ import solutions.techsur.common.microservice.exceptions.ResourceNotFoundExceptio
 import solutions.techsur.common.microservice.exceptions.StaleDataException;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,17 +44,19 @@ public class CommonGlobalExceptionHandler extends ResponseEntityExceptionHandler
 	public ResponseEntity<?> handleStaleDataException(StaleDataException ex) {
 		return makeResponse(ex.getMessage(), HttpStatus.CONFLICT);
 	}
-	
+
 	@ExceptionHandler(InvalidRequestException.class)
 	public ResponseEntity<?> handleInvalidRequestException(InvalidRequestException ex) {
 		return makeResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
 	}
 
-
+	/**
+	 * Builds a simple error response map with message and status.
+	 */
 	private ResponseEntity<?> makeResponse(String message, HttpStatus status) {
-		Map<String, String> errorDetails = new HashMap<>();
-		errorDetails.put(MESSAGE, message);
-		return new ResponseEntity<>(errorDetails, status);
+		Map<String, String> errorResponse = new HashMap<>();
+		errorResponse.put(MESSAGE, message);
+		return new ResponseEntity<>(errorResponse, status);
 	}
 
 	@Override
@@ -62,9 +65,13 @@ public class CommonGlobalExceptionHandler extends ResponseEntityExceptionHandler
 			HttpHeaders headers,
 			HttpStatusCode status,
 			WebRequest request) {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getBindingResult().getFieldErrors()
-				.stream().collect(Collectors
-						.toMap(FieldError::getField, FieldError::getDefaultMessage)));
+
+		Map<String, String> fieldErrors = ex.getBindingResult()
+				.getFieldErrors()
+				.stream()
+				.collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(fieldErrors);
 	}
 
 	@ExceptionHandler(AppException.class)
@@ -97,37 +104,48 @@ public class CommonGlobalExceptionHandler extends ResponseEntityExceptionHandler
 		return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
+	/**
+	 * Logs exception details including request URL, headers, parameters and body if available.
+	 */
 	private void logExceptionWithDetails(String message, Exception ex, HttpServletRequest request) {
-		var requestUrl = request.getRequestURI();
+		String requestUrl = request.getRequestURI();
 
-		// Log headers
-		var headers = new StringBuilder();
-		var headerNames = request.getHeaderNames();
-		while (headerNames.hasMoreElements()) {
-			var name = headerNames.nextElement();
-			var value = request.getHeader(name);
-			headers.append(name).append(": ").append(value).append(", ");
+		StringBuilder headersBuilder = new StringBuilder();
+		Enumeration<String> headerNames = request.getHeaderNames();
+		if (headerNames != null) {
+			while (headerNames.hasMoreElements()) {
+				String name = headerNames.nextElement();
+				String value = request.getHeader(name);
+				headersBuilder.append(name).append(": ").append(value);
+				if (headerNames.hasMoreElements()) {
+					headersBuilder.append(", ");
+				}
+			}
 		}
 
-		// Log parameters
-		var paramString = new StringBuilder();
-		var parameterNames = request.getParameterNames();
-		while (parameterNames.hasMoreElements()) {
-			var name = parameterNames.nextElement();
-			var value = request.getParameter(name);
-			paramString.append(name).append(": ").append(value).append(", ");
+		StringBuilder paramsBuilder = new StringBuilder();
+		Enumeration<String> parameterNames = request.getParameterNames();
+		if (parameterNames != null) {
+			while (parameterNames.hasMoreElements()) {
+				String name = parameterNames.nextElement();
+				String value = request.getParameter(name);
+				paramsBuilder.append(name).append(": ").append(value);
+				if (parameterNames.hasMoreElements()) {
+					paramsBuilder.append(", ");
+				}
+			}
 		}
 
-		var requestBody = "";
+		String requestBody = "";
 		if (request instanceof ContentCachingRequestWrapper) {
-			var wrappedRequest = (ContentCachingRequestWrapper) request;
-			var contentAsByteArray = wrappedRequest.getContentAsByteArray();
+			ContentCachingRequestWrapper wrappedRequest = (ContentCachingRequestWrapper) request;
+			byte[] contentAsByteArray = wrappedRequest.getContentAsByteArray();
 			if (contentAsByteArray != null && contentAsByteArray.length > 0) {
 				requestBody = new String(contentAsByteArray, StandardCharsets.UTF_8);
 			}
 		}
 
 		log.error("{} | URL: {} | Headers: {} | Request Params: {} | Request Body: {}",
-				message,  requestUrl, headers, paramString, requestBody, ex);
+				message, requestUrl, headersBuilder.toString(), paramsBuilder.toString(), requestBody, ex);
 	}
 }
