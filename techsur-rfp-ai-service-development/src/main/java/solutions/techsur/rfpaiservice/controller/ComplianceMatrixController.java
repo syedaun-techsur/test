@@ -22,36 +22,41 @@ import solutions.techsur.rfpaiservice.dto.CommonFilter;
 import solutions.techsur.rfpaiservice.entity.ComplianceMatrix;
 import solutions.techsur.rfpaiservice.service.ComplianceMatrixService;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/compliance")
 @AllArgsConstructor
 @Tag(name = "Compliance Matrix", description = "API for managing Request for Compliance Matrix")
+@Validated
 public class ComplianceMatrixController {
 
     private final ComplianceMatrixService service;
 
     @PostMapping("/{proposalId}")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
-    @Operation(summary = "Create new compliance matrices", description = "Creates new compliance matrices and returns their IDs.")
+    @Operation(summary = "Create new compliance matrices", description = "Creates new compliance matrices and returns a list of their IDs.")
     @ApiResponse(responseCode = "201", description = "Compliance matrices created successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request payload")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    public ResponseEntity<List<CreationDTO>> createComplianceMatrices(@PathVariable Integer proposalId,
+    public ResponseEntity<List<CreationDTO>> createComplianceMatrices(
+            @PathVariable Integer proposalId,
             @Validated(Validation.CreateValidation.class) @RequestBody List<ComplianceMatrixRequest> requests) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createComplianceMatrix(proposalId, requests)
-                .stream().map(complianceMatrix -> CreationDTO
-                        .builder().id(complianceMatrix.getId()).build()).toList());
+        List<CreationDTO> createdIds = service.createComplianceMatrix(proposalId, requests)
+                .stream()
+                .map(complianceMatrix -> CreationDTO.builder().id(complianceMatrix.getId()).build())
+                .collect(Collectors.toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdIds);
     }
-
 
     @GetMapping("/{matrixId}")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
             summary = "Get Compliance Matrix by ID",
-            description = "Retrieves a Compliance Matrix based on the given rfp ID.",
+            description = "Retrieves a Compliance Matrix based on the given matrix ID.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful retrieval of Compliance Matrix"),
                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
@@ -66,28 +71,32 @@ public class ComplianceMatrixController {
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
     @Operation(
             summary = "Get filtered Compliance Matrix",
-            description = "Retrieves a list of proposals based on the given filter and pagination parameters.",
+            description = "Retrieves a list of compliance matrices based on the given filter, proposal ID, and pagination parameters.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful retrieval of Compliance Matrix"),
                     @ApiResponse(responseCode = "400", description = "Invalid request parameters"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    public ResponseEntity<Page<ComplianceMatrix>> getComplianceMatrixPage(CommonFilter filter, @ParameterObject @SortDefault(sort = "status", direction = Sort.Direction.ASC) Pageable pageable, @RequestParam("proposalId") @Parameter(
-            description = "Proposal ID to which the document will be attached.", required = true)
-    Integer proposalId) {
+    public ResponseEntity<Page<ComplianceMatrix>> getComplianceMatrixPage(
+            @ParameterObject @Valid CommonFilter filter,
+            @ParameterObject @SortDefault(sort = "status", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam("proposalId")
+            @Parameter(description = "Proposal ID to which the document will be attached.", required = true) Integer proposalId) {
         return ResponseEntity.ok(service.getComplianceMatrixPage(filter, pageable, proposalId));
     }
 
     @PutMapping("/{proposalId}")
     @PreAuthorize("hasAnyAuthority(@properties.getUploadDocument())")
-    @Operation(summary = "Update an existing compliance matrix", description = "Updates a compliance matrix based on the given ID.")
-    @ApiResponse(responseCode = "200", description = "Compliance matrix updated successfully")
+    @Operation(summary = "Update an existing compliance matrix", description = "Updates compliance matrices associated with the given proposal ID.")
+    @ApiResponse(responseCode = "200", description = "Compliance matrices updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid request payload")
     @ApiResponse(responseCode = "401", description = "Unauthorized")
     @ApiResponse(responseCode = "404", description = "Compliance matrix not found")
     @ApiResponse(responseCode = "500", description = "Internal server error")
-    public ResponseEntity<Void> updateComplianceMatrix(@PathVariable Integer proposalId, @RequestBody List<ComplianceMatrixRequest> request) {
+    public ResponseEntity<Void> updateComplianceMatrix(
+            @PathVariable Integer proposalId,
+            @Validated @RequestBody List<ComplianceMatrixRequest> request) {
         service.updateComplianceMatrix(request, proposalId);
         return ResponseEntity.ok().build();
     }
