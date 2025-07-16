@@ -1,24 +1,29 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchHello } from './api';
 
-function App() {
+const containerStyle: React.CSSProperties = {
+  padding: 32,
+};
+
+function App(): JSX.Element {
   const { data, error, isLoading } = useQuery({
     queryKey: ['hello'],
     queryFn: fetchHello,
   });
 
   return (
-    <div style={{ padding: 32 }}>
+    <main style={containerStyle}>
       <h1>Full Stack Demo (Vite + Spring Boot)</h1>
       <p>
         Backend says:{' '}
         {isLoading
           ? 'Loading...'
-          : error
-          ? `Error: ${(error as Error).message}`
-          : data?.message}
+          : error instanceof Error
+          ? `Error: ${error.message}`
+          : data?.message ?? 'No message received'}
       </p>
-    </div>
+    </main>
   );
 }
 
