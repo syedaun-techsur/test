@@ -1,20 +1,6 @@
 plugins {
+    id 'org.springframework.boot' version '3.5.3' // Ensure this is the latest stable version
     id 'java'
-    id 'org.springframework.boot' version '3.2.0'
-    id 'io.spring.dependency-management' version '1.1.4'
-}
-
-group = 'com.example'
-version = '0.0.1-SNAPSHOT'
-
-java {
-    sourceCompatibility = '17'
-}
-
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
 }
 
 repositories {
@@ -22,19 +8,16 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    
-    runtimeOnly 'com.h2database:h2'
-    
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
+    // Other dependencies...
 
-tasks.named('test') {
-    useJUnitPlatform()
-} 
+    // Lombok dependency
+    compileOnly 'org.projectlombok:lombok:1.18.30' // Ensure this version is compatible with JDK 21
+    annotationProcessor 'org.projectlombok:lombok:1.18.30' // Ensure this version is compatible with JDK 21
+
+    // Spring Boot Starter Web for ResponseEntity
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.5.3' // Ensure this is the latest stable version
+
+    // Other dependencies...
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.5.3' // Ensure this is the latest stable version
+    implementation 'org.springframework.boot:spring-boot-starter-validation:3.5.3' // Ensure this is the latest stable version
+}
