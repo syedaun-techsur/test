@@ -27,61 +27,74 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-	@Value("${common.microservice.cors.origins:*}")
-	private List<String> corsOrigins;
 
-	@Value("${common.microservice.cors.methods:*}")
-	private List<String> corsMethods;
+    @Value("#{'${common.microservice.cors.origins:*}'.split(',')}")
+    private List<String> corsOrigins;
 
-	@Value("${common.microservice.cors.headers:*}")
-	private List<String> corsHeaders;
+    @Value("#{'${common.microservice.cors.methods:*}'.split(',')}")
+    private List<String> corsMethods;
 
-	@Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:https://example.com/jwk-set-uri}")
-	private String jwkSetUri;
+    @Value("#{'${common.microservice.cors.headers:*}'.split(',')}")
+    private List<String> corsHeaders;
 
-	@Bean
-	public SecurityFilterChain customSecurityFilterChain(HttpSecurity http) throws Exception {
-		log.info("CORS Origins: {}", corsOrigins);
-		log.info("CORS Methods: {}", corsMethods);
-		log.info("CORS Headers: {}", corsHeaders);
-		log.info("JWK Set URL {}", jwkSetUri);
+    @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:https://example.com/jwk-set-uri}")
+    private String jwkSetUri;
 
-		http
-//                .csrf(Customizer.withDefaults())
-				.csrf(AbstractHttpConfigurer::disable)
-				.cors(cors -> cors.configurationSource(request -> {
-					CorsConfiguration config = new CorsConfiguration();
-					config.setAllowedOrigins(corsOrigins);
-					config.setAllowedMethods(corsMethods);
-					config.setAllowedHeaders(corsHeaders);
-					return config;
-				}))
-				.authorizeHttpRequests(
-						authorize -> authorize
-								.requestMatchers(
-										"/v3/api-docs/**",
-										"/swagger-resources/**",
-										"/swagger-ui.html",
-										"/webjars/**",
-										"/swagger-ui/**",
-										"/api/v1/**")
-								.permitAll().anyRequest().authenticated())
-				.oauth2ResourceServer(oauth2 -> oauth2
-						.jwt(jwt -> jwt.jwkSetUri(jwkSetUri).jwtAuthenticationConverter(jwtAuthenticationConverter())));
-		return http.build();
-	}
+    @Bean
+    public SecurityFilterChain customSecurityFilterChain(HttpSecurity http) throws Exception {
+        log.info("Initializing Security Configuration");
+        log.debug("CORS Origins: {}", corsOrigins);
+        log.debug("CORS Methods: {}", corsMethods);
+        log.debug("CORS Headers: {}", corsHeaders);
+        log.info("JWK Set URI: {}", jwkSetUri);
 
-	@Bean
-	public JwtAuthenticationConverter jwtAuthenticationConverter() {
-		JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-		jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
-		return jwtAuthenticationConverter;
-	}
+        http
+            // Disable CSRF for APIs
+            .csrf(csrf -> csrf.disable())
+            // Configure CORS
+            .cors(cors -> cors.configurationSource(request -> {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(corsOrigins);
+                config.setAllowedMethods(corsMethods);
+                config.setAllowedHeaders(corsHeaders);
+                config.setAllowCredentials(true);
+                config.setExposedHeaders(List.of("Authorization", "Link", "X-Total-Count"));
+                return config;
+            }))
+            // Configure endpoint authorization
+            .authorizeHttpRequests(authorize -> authorize
+                    .requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/swagger-ui.html",
+                            "/webjars/**",
+                            "/swagger-ui/**",
+                            "/api/v1/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
+            // Configure OAuth2 Resource Server for JWT validation
+            .oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(jwt -> jwt
+                            .jwkSetUri(jwkSetUri)
+                            .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
-	static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
-		@Override
-		public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
-			return JwtUtils.getUserRoles(jwt).stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-		}
-	}
+        return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
+        return converter;
+    }
+
+    static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
+        @Override
+        public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
+            return JwtUtils.getUserRoles(jwt).stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+        }
+    }
 }
