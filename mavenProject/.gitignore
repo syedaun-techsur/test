@@ -1,8 +1,11 @@
+# Ignore project files and folders not needed in VCS
+
+# Documentation and build output
 HELP.md
-target/
+target
 !.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!**/src/main/**/target
+!**/src/test/**/target
 
 ### STS ###
 .apt_generated
@@ -12,28 +15,32 @@ target/
 .settings
 .springBeans
 .sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+bin
+!**/src/main/**/bin
+!**/src/test/**/bin
 
 ### IntelliJ IDEA ###
 .idea
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+out
+!**/src/main/**/out
+!**/src/test/**/out
 
 ### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+nbproject/private
+nbbuild
+dist
+nbdist
+.nb-gradle
 
 ### VS Code ###
-.vscode/
+.vscode
+
+### Miscellaneous ###
+*.log
+*.class
 
 ### Mac OS ###
-.DS_Store 
+.DS_Store
