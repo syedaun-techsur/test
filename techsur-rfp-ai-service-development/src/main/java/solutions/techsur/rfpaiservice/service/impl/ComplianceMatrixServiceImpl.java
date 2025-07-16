@@ -1,7 +1,6 @@
 package solutions.techsur.rfpaiservice.service.impl;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.BeanUtils;
@@ -58,7 +57,7 @@ public class ComplianceMatrixServiceImpl implements ComplianceMatrixService {
     @Override
     public Page<ComplianceMatrix> getComplianceMatrixPage(CommonFilter filter, Pageable pageable, Integer proposalId) {
         Specification<ComplianceMatrix> specification = proposalSpecification(proposalId);
-        if (StringUtils.isNoneBlank(filter.getSearch())) {
+        if (StringUtils.isNotBlank(filter.getSearch())) {
             specification = specification.and(multiFieldSearch(filter));
         }
         return repository.findAll(specification, pageable);
@@ -67,18 +66,18 @@ public class ComplianceMatrixServiceImpl implements ComplianceMatrixService {
     @Override
     public void updateComplianceMatrix(List<ComplianceMatrixRequest> request, Integer proposalId) {
         RequestForProposal proposal = findProposalById(proposalId);
-        if (ObjectUtils.isNotEmpty(proposal.getComplianceMatrices())) {
+        if (StringUtils.isNotBlank(proposal.getComplianceMatrices())) {
             proposal.getComplianceMatrices().clear();
         }
         List<ComplianceMatrix> matrices = new ArrayList<>();
         request.forEach(complianceMatrixRequest -> {
             ComplianceMatrix matrix = ComplianceMatrix.builder().build();
-            if (Strings.isNotEmpty(complianceMatrixRequest.getRequirement())) {
+            if (StringUtils.isNotBlank(complianceMatrixRequest.getRequirement())) {
                 matrix.setRequirement(complianceMatrixRequest.getRequirement());
             }
             matrix.setStatus(complianceMatrixRequest.getStatus());
 
-            if (Strings.isNotEmpty(complianceMatrixRequest.getJustification())) {
+            if (StringUtils.isNotBlank(complianceMatrixRequest.getJustification())) {
                 matrix.setJustification(complianceMatrixRequest.getJustification());
             }
 
