@@ -21,7 +21,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
@@ -35,52 +38,73 @@ public class ComplianceMatrixControllerTest {
     private ComplianceMatrixController controller;
 
     private ComplianceMatrix complianceMatrix;
-    private List<ComplianceMatrixRequest> complianceMatrixRequest;
+    private List<ComplianceMatrixRequest> complianceMatrixRequests;
 
     @BeforeEach
     void setUp() {
         complianceMatrix = new ComplianceMatrix();
         complianceMatrix.setId(1);
-        complianceMatrixRequest = List.of(new ComplianceMatrixRequest());
+        complianceMatrixRequests = List.of(new ComplianceMatrixRequest());
     }
 
     @Test
-    void testCreateComplianceMatrices() {
+    void shouldCreateComplianceMatricesSuccessfully() {
+        // Arrange
         when(service.createComplianceMatrix(anyInt(), anyList())).thenReturn(List.of(complianceMatrix));
 
-        ResponseEntity<List<CreationDTO>> response = controller.createComplianceMatrices(anyInt(), complianceMatrixRequest);
+        // Act - use explicit projectId rather than anyInt matcher as argument
+        int projectId = 1;
+        ResponseEntity<List<CreationDTO>> response = controller.createComplianceMatrices(projectId, complianceMatrixRequests);
 
+        // Assert
         assertEquals(201, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
         assertFalse(response.getBody().isEmpty());
     }
 
     @Test
-    void testGetComplianceMatrix() {
+    void shouldReturnComplianceMatrixById() {
+        // Arrange
         when(service.getComplianceMatrix(1)).thenReturn(complianceMatrix);
 
+        // Act
         ResponseEntity<ComplianceMatrix> response = controller.getComplianceMatrix(1);
 
+        // Assert
         assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
         assertEquals(1, response.getBody().getId());
     }
 
     @Test
-    void testGetComplianceMatrixPage() {
+    void shouldReturnPagedComplianceMatrix() {
+        // Arrange
         Page<ComplianceMatrix> page = new PageImpl<>(List.of(complianceMatrix));
-        when(service.getComplianceMatrixPage(any(), any(), anyInt())).thenReturn(page);
+        when(service.getComplianceMatrixPage(any(CommonFilter.class), any(PageRequest.class), anyInt())).thenReturn(page);
 
-        ResponseEntity<Page<ComplianceMatrix>> response = controller.getComplianceMatrixPage(new CommonFilter(), PageRequest.of(0, 10), anyInt());
+        // Act
+        CommonFilter filter = new CommonFilter();
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        int projectId = 1;
+        ResponseEntity<Page<ComplianceMatrix>> response = controller.getComplianceMatrixPage(filter, pageRequest, projectId);
 
+        // Assert
         assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
         assertFalse(response.getBody().isEmpty());
+        assertEquals(1, response.getBody().getTotalElements());
     }
 
     @Test
-    void testUpdateComplianceMatrix() {
+    void shouldUpdateComplianceMatrixSuccessfully() {
+        // Arrange
         doNothing().when(service).updateComplianceMatrix(any(), anyInt());
 
-        ResponseEntity<Void> response = controller.updateComplianceMatrix(1, complianceMatrixRequest);
+        // Act
+        int projectId = 1;
+        ResponseEntity<Void> response = controller.updateComplianceMatrix(projectId, complianceMatrixRequests);
 
+        // Assert
         assertEquals(200, response.getStatusCodeValue());
     }
 }
