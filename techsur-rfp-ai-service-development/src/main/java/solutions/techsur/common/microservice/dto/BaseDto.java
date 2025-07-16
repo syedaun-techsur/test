@@ -9,18 +9,26 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Data
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public abstract class BaseDto<I> {
-	protected I id;
-	protected Integer version;
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	protected Instant created;
-	protected String createdBy;
-	protected String createdByName;
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	protected Instant updated;
-	protected String updatedBy;
-	protected String updatedByName;
+    @EqualsAndHashCode.Include
+    protected I id;
+
+    protected Integer version;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
+    protected Instant created;
+
+    protected String createdBy;
+
+    protected String createdByName;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
+    protected Instant updated;
+
+    protected String updatedBy;
+
+    protected String updatedByName;
 }
