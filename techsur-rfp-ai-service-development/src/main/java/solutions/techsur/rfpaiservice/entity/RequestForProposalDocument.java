@@ -1,13 +1,28 @@
 package solutions.techsur.rfpaiservice.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import solutions.techsur.common.microservice.entity.BaseEntity;
 
-import java.util.List;
-
+/**
+ * Entity representing a document associated with a Request For Proposal (RFP).
+ */
 @Table(name = "rfp_documents")
 @Entity
 @AllArgsConstructor
@@ -36,5 +51,5 @@ public class RequestForProposalDocument extends BaseEntity {
     private String filePath;
 
     @Transient
-    String role;
+    private String role;
 }
