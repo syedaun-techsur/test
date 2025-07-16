@@ -1,32 +1,54 @@
 package solutions.techsur.rfpaiservice.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
+
 import solutions.techsur.common.microservice.entity.BaseEntity;
 
-import java.util.List;
-
-@Table(name = "rfp_documents")
+/**
+ * Entity representing a document associated with a Request For Proposal (RFP).
+ */
 @Entity
+@Table(name = "rfp_documents")
+@Audited
+@AuditTable("rfp_documents_aud")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@EqualsAndHashCode(callSuper = true, exclude = {"requestForProposal"})
-@Setter
 @Getter
-@Audited
-@AuditTable("rfp_documents_aud")
-@ToString(callSuper = true, exclude = {"requestForProposal"})
+@Setter
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class RequestForProposalDocument extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "rfp_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rfp_id", nullable = false)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private RequestForProposal requestForProposal;
 
     @Column(name = "file_name")
@@ -36,5 +58,5 @@ public class RequestForProposalDocument extends BaseEntity {
     private String filePath;
 
     @Transient
-    String role;
+    private String role;
 }
