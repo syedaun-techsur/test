@@ -4,49 +4,74 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@Setter
 @Builder
-@JsonPropertyOrder({"subSectionId", "subSectionNumber", "subSectionTitle", "requirement", "context", "parentId", "subsections"})
+@JsonPropertyOrder({
+        "subSectionId",
+        "subSectionNumber",
+        "subSectionTitle",
+        "requirement",
+        "context",
+        "parentId",
+        "subsections",
+        "isGeneratedContent",
+        "content",
+        "lastUpdatedDate",
+        "sectionPurpose",
+        "instructionsToWriter",
+        "sourceMapping",
+        "winThemeAlignment"
+})
 public class SubSectionResponse {
 
+    @JsonProperty("subSectionId")
     private Integer outlineSubSectionId;
 
-    @JsonProperty("subsection_id")
+    @JsonProperty("subSectionNumber")
     private String subSectionNumber;
 
-    @JsonProperty("subsection_title")
+    @JsonProperty("subSectionTitle")
     private String subSectionTitle;
 
+    @JsonProperty("requirement")
     private String requirement;
 
+    @JsonProperty("context")
     private String context;
 
+    @JsonProperty("parentId")
     private Integer parentId;
 
-    List<SubSectionResponse> subsections;
+    @Builder.Default
+    @JsonProperty("subsections")
+    private List<SubSectionResponse> subsections = new ArrayList<>();
 
+    @JsonProperty("isGeneratedContent")
     private boolean isGeneratedContent;
 
+    @JsonProperty("content")
     private String content;
 
+    @JsonProperty("lastUpdatedDate")
     private Instant lastUpdatedDate;
 
-    @JsonProperty("section_purpose")
+    @JsonProperty("sectionPurpose")
     private String sectionPurpose;
 
-    @JsonProperty("instructions_to_writer")
+    @JsonProperty("instructionsToWriter")
     private String instructionsToWriter;
 
-    @JsonProperty("source_mapping")
-    private List<String> sourceMapping;
+    @Builder.Default
+    @JsonProperty("sourceMapping")
+    private List<String> sourceMapping = new ArrayList<>();
 
-    @JsonProperty("win_theme_alignment")
-    private List<String> winThemeAlignment;
+    @Builder.Default
+    @JsonProperty("winThemeAlignment")
+    private List<String> winThemeAlignment = new ArrayList<>();
 
 }
