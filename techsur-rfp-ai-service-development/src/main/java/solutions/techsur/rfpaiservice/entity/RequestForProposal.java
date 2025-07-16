@@ -14,36 +14,44 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@Table(name = "rfps")
+/**
+ * Entity representing a Request For Proposal (RFP).
+ */
 @Entity
-@EqualsAndHashCode(callSuper = true, exclude = {"responseOutlines", "complianceMatrices"})
+@Table(name = "rfps")
+@Audited
+@AuditTable(value = "rfps_aud")
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @Setter
 @Getter
-@Audited
-@AuditTable(value = "rfps_aud")
+@EqualsAndHashCode(callSuper = true, exclude = {"responseOutlines", "complianceMatrices"})
 @ToString(callSuper = true, exclude = {"responseOutlines", "complianceMatrices"})
 public class RequestForProposal extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "title")
+
+    @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "description")
     private String description;
-    @Column(name = "dead_line", nullable = false)
+
+    @Column(name = "deadline", nullable = false)
     private LocalDate deadline;
 
-    @Enumerated(EnumType.STRING)  // Store enum as String
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
     private Status status = Status.UPLOADED;
 
     @Column(name = "solicitation_id", nullable = false)
     private String solicitationId;
 
-    @Column(name = "is_archived", columnDefinition = "boolean default false", nullable = false)
+    @Column(name = "is_archived", nullable = false, columnDefinition = "boolean default false")
     @Builder.Default
     private boolean isArchived = false;
 
@@ -53,9 +61,13 @@ public class RequestForProposal extends BaseEntity {
     private List<ResponseOutline> responseOutlines = new ArrayList<>();
 
     @OneToMany(mappedBy = "proposal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     @JsonManagedReference
     private List<ComplianceMatrix> complianceMatrices = new ArrayList<>();
 
+    /**
+     * Status of the RFP.
+     */
     public enum Status {
         UPLOADED("Uploaded"),
         PROCESSING("Processing"),
@@ -68,12 +80,12 @@ public class RequestForProposal extends BaseEntity {
             this.dbValue = dbValue;
         }
 
-        @JsonValue  // Store string representation in JSON responses
+        @JsonValue
         public String getDbValue() {
             return dbValue;
         }
 
-        @JsonCreator  // Convert string back to Enum when reading JSON
+        @JsonCreator
         public static Status fromDbValue(String dbValue) {
             for (Status status : values()) {
                 if (status.dbValue.equalsIgnoreCase(dbValue)) {
