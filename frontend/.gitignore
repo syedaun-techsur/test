@@ -7,18 +7,40 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency folders
 node_modules
+node_modules/.vite
+
+# Build output
 dist
 dist-ssr
+.vite
+.vite/deps
+
+# Misc
 *.local
+coverage/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+
+# Cache and local files
+.cache
+.npmrc
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Additional common frontend cache (optional but recommended)
+.turbo
+.next
