@@ -7,19 +7,26 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
 @Builder
-@JsonPropertyOrder({"sectionTitle", "sectionId", "sectionNumber", "subsections", "requirement", "context", "parentId"}) // Ensures order
+@JsonPropertyOrder({
+    "sectionTitle", "sectionId", "sectionNumber", "subsections", "requirement",
+    "context", "parentId", "content", "lastUpdatedDate",
+    "sectionPurpose", "instructionsToWriter", "sourceMapping", "winThemeAlignment"
+}) // Ensures order
 public class SectionResponse {
+
     @JsonProperty("section_title")
     private String sectionTitle;
 
-    private Integer outlineSectionId;
-
     @JsonProperty("section_id")
+    private Integer sectionId;
+
+    @JsonProperty("section_number")
     private String sectionNumber;
 
     private String requirement;
@@ -28,7 +35,7 @@ public class SectionResponse {
 
     private Integer parentId;
 
-    List<SubSectionResponse> subsections;
+    private List<SubSectionResponse> subsections = new ArrayList<>();
 
     private String content;
 
