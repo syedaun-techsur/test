@@ -1,17 +1,39 @@
 package solutions.techsur.common.microservice.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.properties.ConstructorBinding;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
-@Component("properties")
+/**
+ * Configuration properties for authorization-related settings.
+ */
 @ConfigurationProperties(prefix = "rfpaiapi.authority")
-@Getter
-@Setter
+@ConstructorBinding
+@Validated
 public class AuthProperties {
-    private List<String> uploadDocument;
-    private List<String> deleteProposal;
+
+    /**
+     * List of authorities allowed to upload documents.
+     */
+    private final List<String> uploadDocument;
+
+    /**
+     * List of authorities allowed to delete proposals.
+     */
+    private final List<String> deleteProposal;
+
+    public AuthProperties(List<String> uploadDocument, List<String> deleteProposal) {
+        this.uploadDocument = uploadDocument;
+        this.deleteProposal = deleteProposal;
+    }
+
+    public List<String> getUploadDocument() {
+        return uploadDocument;
+    }
+
+    public List<String> getDeleteProposal() {
+        return deleteProposal;
+    }
 }
