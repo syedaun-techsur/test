@@ -2,8 +2,6 @@ package solutions.techsur.rfpaiservice.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.util.Strings;
-import org.keycloak.admin.client.Keycloak;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,18 +35,14 @@ import static solutions.techsur.rfpaiservice.repository.RFPDocumentSpecification
 @Transactional
 public class RequestForProposalDocumentServiceImpl implements RequestForProposalDocumentService {
 
-
     private final DocumentHelper documentHelper;
-
     private final RequestForProposalRepository requestForProposalRepository;
-
     private final RequestForProposalDocumentRepository documentRepository;
-
-    private final Keycloak keycloak;
+    private final org.keycloak.admin.client.Keycloak keycloak;
 
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("pdf", "docx", "txt", "xls", "xlsx", "doc");
 
-    public RequestForProposalDocumentServiceImpl(DocumentHelper documentHelper, RequestForProposalRepository requestForProposalRepository, RequestForProposalDocumentRepository documentRepository, Keycloak keycloak) {
+    public RequestForProposalDocumentServiceImpl(DocumentHelper documentHelper, RequestForProposalRepository requestForProposalRepository, RequestForProposalDocumentRepository documentRepository, org.keycloak.admin.client.Keycloak keycloak) {
         this.documentHelper = documentHelper;
         this.requestForProposalRepository = requestForProposalRepository;
         this.documentRepository = documentRepository;
@@ -57,16 +51,14 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
 
     @Override
     public String uploadRFPDocument(MultipartFile[] files, Integer proposalId, boolean isBlueBook, boolean isAdmin) {
-        // validate file
+        // Validate all files upfront
         for (MultipartFile file : files) {
-           String [] fileValidationMessage = validateMultipartFile(file);
-            // if file is not valid then return message from here.
+            String[] fileValidationMessage = validateMultipartFile(file);
             if (ObjectUtils.isNotEmpty(fileValidationMessage)) {
                 throw new AppException(INVALID_FILE, fileValidationMessage);
             }
         }
 
-        // Get Proposal.
         RequestForProposal proposal = null;
         if (proposalId != null) {
             proposal = findProposalById(proposalId);
@@ -74,19 +66,20 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
 
         List<RequestForProposalDocument> documents = new ArrayList<>();
 
-        RequestForProposal finalProposal = proposal;
+        final RequestForProposal finalProposal = proposal;
         List<String> uploadedFiles = Arrays.stream(files)
                 .map(file -> {
                     String fileName = StringUtils.cleanPath(file.getOriginalFilename());
                     String fileKey;
-
                     if (isAdmin && isBlueBook) {
                         fileKey = documentHelper.getFilePathForAdminBlueBook(fileName);
                     } else {
+                        if (finalProposal == null) {
+                            throw new AppException(RFP_NOT_FOUND, "Proposal ID is required for non-admin uploads");
+                        }
                         fileKey = documentHelper.getFilePath(isBlueBook, fileName, finalProposal.getId());
                     }
 
-                    // Save document metadata first
                     RequestForProposalDocument document = RequestForProposalDocument.builder()
                             .fileName(fileName)
                             .requestForProposal(finalProposal)
@@ -98,12 +91,11 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
                         documentHelper.uploadRFPDocument(file, fileKey);
                         return fileName;
                     } catch (IOException e) {
-                        throw new AppException(INTERNAL_ERROR, "Facing issue while uploading the file " + fileName);
+                        throw new AppException(INTERNAL_ERROR, "Facing issue while uploading the file " + fileName, e);
                     }
                 })
-                .toList();
+                .collect(Collectors.toList());
 
-        // Upload the actual file
         documentRepository.saveAll(documents);
         return String.join(", ", uploadedFiles);
     }
@@ -116,7 +108,7 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
             documentHelper.deleteRFPDocument(document.getFilePath());
         } catch (Exception e) {
             log.error("Error deleting file: {}", document.getFileName(), e);
-            throw new AppException(INTERNAL_ERROR, "Failed to delete file: " + document.getFileName());
+            throw new AppException(INTERNAL_ERROR, "Failed to delete file: " + document.getFileName(), e);
         }
     }
 
@@ -129,10 +121,13 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 
         RequestForProposalDocument document = findDocumentById(documentId);
-        String fileKey = "";
+        String fileKey;
         if (isBlueBook && isAdmin) {
             fileKey = documentHelper.getFilePathForAdminBlueBook(fileName);
         } else {
+            if (document.getRequestForProposal() == null) {
+                throw new AppException(RFP_NOT_FOUND, "Associated Proposal not found for document id " + documentId);
+            }
             fileKey = documentHelper.getFilePath(isBlueBook, fileName, document.getRequestForProposal().getId());
         }
 
@@ -143,7 +138,7 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
             document.setFileName(fileName);
             documentRepository.save(document);
         } catch (IOException e) {
-            throw new AppException(INTERNAL_ERROR, "Facing issue while replacing the file " + document.getFileName());
+            throw new AppException(INTERNAL_ERROR, "Facing issue while replacing the file " + document.getFileName(), e);
         }
     }
 
@@ -156,10 +151,21 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
 
         List<RequestForProposalDocument> uploadedByAdmin = getAllBluePrintDocumentUploadedByAdmin();
 
-        List<RequestForProposalDocument> blueBooks = Stream.concat(proposalDocuments.stream().filter(document -> document.getFilePath().contains("bluebook")).peek(requestForProposalDocument -> requestForProposalDocument.setRole("Contributor")), uploadedByAdmin.stream().peek(requestForProposalDocument -> requestForProposalDocument.setRole("Admin"))).toList();
+        List<RequestForProposalDocument> blueBooks = Stream.concat(
+                proposalDocuments.stream()
+                        .filter(document -> document.getFilePath().contains("bluebook"))
+                        .peek(document -> document.setRole("Contributor")),
+                uploadedByAdmin.stream()
+                        .peek(document -> document.setRole("Admin"))
+        ).collect(Collectors.toList());
+
         return ProposalDocumentResponse.builder()
-                .uploadedDocument(proposalDocuments.stream().filter(document -> !document.getFilePath().contains("bluebook")).peek(requestForProposalDocument -> requestForProposalDocument.setRole("Contributor")).toList())
-                .blueBookDocument(blueBooks).build();
+                .uploadedDocument(proposalDocuments.stream()
+                        .filter(document -> !document.getFilePath().contains("bluebook"))
+                        .peek(document -> document.setRole("Contributor"))
+                        .collect(Collectors.toList()))
+                .blueBookDocument(blueBooks)
+                .build();
     }
 
     @Override
@@ -188,10 +194,9 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
     @Override
     public void copyDocuments(String solicitationId, List<Integer> documentIds) {
         List<RequestForProposalDocument> documents = documentRepository.findAllById(documentIds);
-        Map<String, String> fileNameAndFilePathMap = documents.stream().collect(Collectors.toMap(RequestForProposalDocument::getFileName, RequestForProposalDocument::getFilePath));
-        //Delete files from the @solicitationId folder
+        Map<String, String> fileNameAndFilePathMap = documents.stream()
+                .collect(Collectors.toMap(RequestForProposalDocument::getFileName, RequestForProposalDocument::getFilePath));
         documentHelper.deleteFilesInFolder(solicitationId);
-        //Copy file from source to destination.
         documentHelper.copySpecificDocuments(fileNameAndFilePathMap, solicitationId);
     }
 
@@ -200,43 +205,48 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
         return findDocumentById(documentId);
     }
 
+    @Override
     public ResponseInputStream<GetObjectResponse> getS3Document(String filePath) {
         return documentHelper.getDocumentFromS3(filePath);
     }
 
-
+    @Override
     public String resolveContentType(String fileName) {
-        if (fileName == null) return "application/octet-stream";
+        if (fileName == null) {
+            return "application/octet-stream";
+        }
 
-        fileName = fileName.toLowerCase();
+        String lowerFileName = fileName.toLowerCase();
 
-        if (fileName.endsWith(".pdf")) {
+        if (lowerFileName.endsWith(".pdf")) {
             return "application/pdf";
-        } else if (fileName.endsWith(".docx")) {
+        } else if (lowerFileName.endsWith(".docx")) {
             return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        } else if (fileName.endsWith(".doc")) {
+        } else if (lowerFileName.endsWith(".doc")) {
             return "application/msword";
-        } else if (fileName.endsWith(".txt")) {
+        } else if (lowerFileName.endsWith(".txt")) {
             return "text/plain";
-        } else if (fileName.endsWith(".xls")) {
+        } else if (lowerFileName.endsWith(".xls")) {
             return "application/vnd.ms-excel";
-        } else if (fileName.endsWith(".xlsx")) {
+        } else if (lowerFileName.endsWith(".xlsx")) {
             return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         } else {
             return "application/octet-stream"; // fallback
         }
     }
 
-    //private method region start
+    // Private method region start
 
     private String[] validateMultipartFile(MultipartFile file) {
         List<String> errors = new ArrayList<>();
         if (file == null || file.isEmpty()) {
             log.warn("File is empty or null.");
             errors.add("File is empty. Please upload a valid file.");
+            return errors.toArray(new String[0]);
         }
 
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
+
         if (filename.contains("..")) {
             log.warn("Invalid filename: {}", filename);
             errors.add("Invalid filename.");
@@ -247,11 +257,15 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
             log.warn("Invalid file format: {}", fileExtension);
             errors.add("Invalid file format. Only PDF, DOCX, DOC, XLS, XLSX, and TXT are allowed.");
         }
-        return errors.stream().toArray(String[]::new);
+        return errors.toArray(new String[0]);
     }
 
     private String getFileExtension(String filename) {
-        return filename.contains(".") ? filename.substring(filename.lastIndexOf(".") + 1).toLowerCase() : Strings.EMPTY;
+        if (StringUtils.isEmpty(filename)) {
+            return "";
+        }
+        int lastDotIndex = filename.lastIndexOf('.');
+        return (lastDotIndex == -1) ? "" : filename.substring(lastDotIndex + 1).toLowerCase();
     }
 
     private RequestForProposalDocument findDocumentById(Integer documentId) {
@@ -264,5 +278,5 @@ public class RequestForProposalDocumentServiceImpl implements RequestForProposal
                 .orElseThrow(() -> new AppException(RFP_NOT_FOUND));
     }
 
-    //private method region end.
+    // Private method region end
 }
