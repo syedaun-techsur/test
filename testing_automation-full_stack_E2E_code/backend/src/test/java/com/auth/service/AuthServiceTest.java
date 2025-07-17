@@ -71,9 +71,7 @@ class AuthServiceTest {
     void testLoginWithInvalidEmail() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.login(loginRequest);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.login(loginRequest));
 
         assertEquals("Invalid email or password", exception.getMessage());
     }
@@ -83,9 +81,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.login(loginRequest);
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.login(loginRequest));
 
         assertEquals("Invalid email or password", exception.getMessage());
     }
@@ -107,9 +103,7 @@ class AuthServiceTest {
     void testGetUserByEmailNotFound() {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.getUserByEmail("nonexistent@example.com");
-        });
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> authService.getUserByEmail("nonexistent@example.com"));
 
         assertEquals("User not found", exception.getMessage());
     }
