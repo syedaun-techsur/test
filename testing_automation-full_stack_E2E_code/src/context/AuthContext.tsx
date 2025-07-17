@@ -35,31 +35,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on app startup
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    // Check for existing token and user on app startup
+    const savedToken = localStorage.getItem('authToken') || null;
+    const savedUserString = localStorage.getItem('user') || null;
+
+    if (savedToken && savedUserString) {
+      try {
+        const savedUser = JSON.parse(savedUserString) as User;
+        setToken(savedToken);
+        setUser(savedUser);
+      } catch (error) {
+        // Invalid JSON in storage; clear corrupted data safely
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+      }
     }
     setIsLoading(false);
-  }, []);
+  }, []); // run once on mount
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const response = await fetch('http://localhost:8080/api/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      // Explicitly type data for clarity
+      const data: { token?: string; user?: User; message?: string } = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.token && data.user) {
         setToken(data.token);
         setUser(data.user);
         localStorage.setItem('authToken', data.token);
@@ -69,20 +78,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, message: data.message || 'Login failed' };
       }
     } catch (error) {
+      console.error('Login error:', error);
       return { success: false, message: 'Network error. Please try again.' };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
+  const logout = (): void => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     token,
     login,
