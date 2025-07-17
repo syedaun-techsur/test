@@ -44,7 +44,7 @@ const BreadcrumbLink = React.forwardRef<
   React.ComponentPropsWithoutRef<"a"> & {
     asChild?: boolean
   }
->(({ asChild, className, ...props }, ref) => {
+>(({ asChild = false, className, ...props }, ref) => {
   const Comp = asChild ? Slot : "a"
 
   return (
@@ -72,11 +72,9 @@ const BreadcrumbPage = React.forwardRef<
 ))
 BreadcrumbPage.displayName = "BreadcrumbPage"
 
-const BreadcrumbSeparator = ({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<"li">) => (
+const BreadcrumbSeparator: React.FC<
+  React.PropsWithChildren<React.ComponentProps<"li">>
+> = ({ children, className, ...props }) => (
   <li
     role="presentation"
     aria-hidden="true"
@@ -88,10 +86,9 @@ const BreadcrumbSeparator = ({
 )
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
 
-const BreadcrumbEllipsis = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
+const BreadcrumbEllipsis: React.FC<
+  React.ComponentPropsWithoutRef<"span">
+> = ({ className, ...props }) => (
   <span
     role="presentation"
     aria-hidden="true"
@@ -102,7 +99,7 @@ const BreadcrumbEllipsis = ({
     <span className="sr-only">More</span>
   </span>
 )
-BreadcrumbEllipsis.displayName = "BreadcrumbElipssis"
+BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis"
 
 export {
   Breadcrumb,
@@ -113,4 +110,3 @@ export {
   BreadcrumbSeparator,
   BreadcrumbEllipsis,
 }
-
