@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 interface User {
   id: number;
@@ -34,17 +34,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+        setToken(null);
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('user');
+      }
+    } catch (error) {
+      setUser(null);
+      setToken(null);
+      sessionStorage.removeItem('authToken');
+      sessionStorage.removeItem('user');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
   useEffect(() => {
-    // Check for existing token on app startup
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
+    const savedToken = sessionStorage.getItem('authToken');
+    const savedUser = sessionStorage.getItem('user');
+
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
+      fetchUserData();
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
+  }, [fetchUserData]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
@@ -62,8 +90,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.ok) {
         setToken(data.token);
         setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('authToken', data.token);
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+        fetchUserData();
         return { success: true };
       } else {
         return { success: false, message: data.message || 'Login failed' };
@@ -78,8 +107,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('user');
   };
 
   const value = {
