@@ -10,21 +10,21 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    
+
     @Value("${jwt.secret:mySecretKeyForJWTTokenGenerationAndValidation}")
     private String jwtSecret;
-    
+
     @Value("${jwt.expiration:86400000}") // 24 hours
     private Long jwtExpiration;
-    
+
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
-    
+
     public String generateToken(String email, Long userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpiration);
-        
+
         return Jwts.builder()
                 .setSubject(email)
                 .claim("userId", userId)
@@ -33,50 +33,49 @@ public class JwtUtil {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
-    
+
     public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        
+        Claims claims = parseClaimsJws(token);
         return claims.getSubject();
     }
-    
+
     public Long getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        
-        return claims.get("userId", Long.class);
+        Claims claims = parseClaimsJws(token);
+        Object userIdClaim = claims.get("userId");
+        if (userIdClaim instanceof Long) {
+            return (Long) userIdClaim;
+        } else {
+            throw new JwtException("User ID claim is not of type Long");
+        }
     }
-    
+
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
+            parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (JwtException e) {
             return false;
         }
     }
-    
+
     public boolean isTokenExpired(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
+            Claims claims = parseClaimsJws(token);
+            return claims.getExpiration().before(new Date());
+        } catch (JwtException e) {
+            return true;
+        }
+    }
+
+    private Claims parseClaimsJws(String token) {
+        try {
+            return Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            
-            return claims.getExpiration().before(new Date());
-        } catch (JwtException | IllegalArgumentException e) {
-            return true;
+        } catch (JwtException e) {
+            throw new JwtException("Failed to parse JWT", e);
         }
     }
 }
