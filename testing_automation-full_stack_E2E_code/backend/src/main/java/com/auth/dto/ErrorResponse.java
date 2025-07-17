@@ -1,60 +1,95 @@
 package com.auth.dto;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+/**
+ * DTO for Error Responses
+ */
 public class ErrorResponse {
-    private int status;
-    private String message;
-    private LocalDateTime timestamp;
-    private List<String> errors;
-    
-    // Constructors
+    private final int status;
+    private final String message;
+    private final LocalDateTime timestamp;
+    private final List<String> errors;
+
+    /**
+     * Default constructor initializing with default values and current timestamp.
+     * Errors list initialized as empty.
+     */
     public ErrorResponse() {
-        this.timestamp = LocalDateTime.now();
+        this(0, null, Collections.emptyList());
     }
-    
+
+    /**
+     * Constructor with status and message.
+     *
+     * @param status  HTTP status code
+     * @param message Error message
+     */
     public ErrorResponse(int status, String message) {
-        this();
+        this(status, message, Collections.emptyList());
+    }
+
+    /**
+     * Constructor with status, message and error details.
+     *
+     * @param status  HTTP status code
+     * @param message Error message
+     * @param errors  List of error details
+     */
+    public ErrorResponse(int status, String message, List<String> errors) {
         this.status = status;
         this.message = message;
+        this.timestamp = LocalDateTime.now();
+        this.errors = errors == null ? Collections.emptyList() : Collections.unmodifiableList(errors);
     }
-    
-    public ErrorResponse(int status, String message, List<String> errors) {
-        this(status, message);
-        this.errors = errors;
-    }
-    
-    // Getters and Setters
+
     public int getStatus() {
         return status;
     }
-    
-    public void setStatus(int status) {
-        this.status = status;
-    }
-    
+
     public String getMessage() {
         return message;
     }
-    
-    public void setMessage(String message) {
-        this.message = message;
-    }
-    
+
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
-    
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-    
+
+    /**
+     * Returns an unmodifiable list of error details.
+     *
+     * @return List of errors, never null.
+     */
     public List<String> getErrors() {
         return errors;
     }
-    
-    public void setErrors(List<String> errors) {
-        this.errors = errors;
+
+    @Override
+    public String toString() {
+        return "ErrorResponse{" +
+                "status=" + status +
+                ", message='" + message + '\'' +
+                ", timestamp=" + timestamp +
+                ", errors=" + errors +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ErrorResponse)) return false;
+        ErrorResponse that = (ErrorResponse) o;
+        return status == that.status &&
+                Objects.equals(message, that.message) &&
+                Objects.equals(timestamp, that.timestamp) &&
+                Objects.equals(errors, that.errors);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(status, message, timestamp, errors);
     }
 }
