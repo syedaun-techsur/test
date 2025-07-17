@@ -3,6 +3,9 @@ package com.auth.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entity representing a User in the system.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -23,20 +26,28 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    // Constructors
+    /**
+     * Default constructor initializing timestamps.
+     */
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // Empty constructor for JPA
     }
     
+    /**
+     * Parameterized constructor to initialize User fields.
+     * 
+     * @param email User's email
+     * @param password User's password
+     * @param firstName User's first name
+     * @param lastName User's last name
+     */
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -44,6 +55,7 @@ public class User {
     }
     
     // Getters and Setters
+    
     public Long getId() {
         return id;
     }
@@ -100,8 +112,30 @@ public class User {
         this.updatedAt = updatedAt;
     }
     
+    /**
+     * Lifecycle hook to set timestamps before persisting.
+     */
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+    
+    /**
+     * Lifecycle hook to update the timestamp before updating entity.
+     */
     @PreUpdate
-    public void preUpdate() {
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Lifecycle hook before removing the entity.
+     * Placeholder for cleanup operations if needed.
+     */
+    @PreRemove
+    protected void onRemove() {
+        // Placeholder for pre-remove logic if needed
     }
 }
