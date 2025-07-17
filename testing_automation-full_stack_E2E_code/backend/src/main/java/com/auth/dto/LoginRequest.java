@@ -4,37 +4,68 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * DTO for capturing login request credentials.
+ */
 public class LoginRequest {
-    
+
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
     private String email;
-    
+
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
-    
-    // Constructors
-    public LoginRequest() {}
-    
+
+    /**
+     * Default constructor.
+     */
+    public LoginRequest() {
+    }
+
+    /**
+     * Constructs a new LoginRequest with specified email and password.
+     *
+     * @param email    the user's email address
+     * @param password the user's password
+     */
     public LoginRequest(String email, String password) {
         this.email = email;
         this.password = password;
     }
-    
-    // Getters and Setters
+
+    /**
+     * Returns the email address.
+     *
+     * @return email
+     */
     public String getEmail() {
         return email;
     }
-    
+
+    /**
+     * Sets the email address.
+     *
+     * @param email the email to set
+     */
     public void setEmail(String email) {
         this.email = email;
     }
-    
+
+    /**
+     * Returns the password.
+     *
+     * @return password
+     */
     public String getPassword() {
         return password;
     }
-    
+
+    /**
+     * Sets the password.
+     *
+     * @param password the password to set
+     */
     public void setPassword(String password) {
         this.password = password;
     }
