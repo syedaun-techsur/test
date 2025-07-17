@@ -13,48 +13,92 @@ interface UserProfile {
   created_at: string;
 }
 
-const Dashboard = () => {
+interface Stat {
+  title: string;
+  value: string;
+  description: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  color: string;
+}
+
+const stats: Stat[] = [
+  {
+    title: 'Total Projects',
+    value: '12',
+    description: 'Active projects',
+    icon: Activity,
+    color: 'from-blue-500 to-cyan-500',
+  },
+  {
+    title: 'Tasks Completed',
+    value: '48',
+    description: 'This month',
+    icon: Calendar,
+    color: 'from-green-500 to-emerald-500',
+  },
+  {
+    title: 'Team Members',
+    value: '6',
+    description: 'Collaborators',
+    icon: User,
+    color: 'from-purple-500 to-pink-500',
+  },
+  {
+    title: 'Notifications',
+    value: '3',
+    description: 'Unread messages',
+    icon: Bell,
+    color: 'from-orange-500 to-red-500',
+  },
+];
+
+const Dashboard: React.FC = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  // Redirect to login if not authenticated (handled by parent component)
   if (!isAuthenticated || !user) {
     return null;
   }
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
-      
+      if (!user?.id) return;
+
       try {
-        // Use any type to bypass TypeScript error until types are regenerated
-        const { data, error } = await (supabase as any)
-          .from('profiles')
+        const { data, error } = await supabase
+          .from<UserProfile>('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
+          // If error is not "No rows found" (code may vary), log and fallback
           console.error('Error fetching profile:', error);
-          // If profile doesn't exist, use user data as fallback
           setProfile({
             id: user.id,
-            email: user.email || '',
-            name: user.user_metadata?.name || user.email || '',
-            created_at: user.created_at || new Date().toISOString()
+            email: user.email ?? '',
+            name: (user.user_metadata?.name as string) ?? user.email ?? '',
+            created_at: user.created_at ?? new Date().toISOString(),
           });
-        } else {
+        } else if (data) {
           setProfile(data);
+        } else {
+          // No profile found, fallback to user data
+          setProfile({
+            id: user.id,
+            email: user.email ?? '',
+            name: (user.user_metadata?.name as string) ?? user.email ?? '',
+            created_at: user.created_at ?? new Date().toISOString(),
+          });
         }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        // Fallback to user data
+      } catch (err) {
+        console.error('Error fetching profile:', err);
         setProfile({
           id: user.id,
-          email: user.email || '',
-          name: user.user_metadata?.name || user.email || '',
-          created_at: user.created_at || new Date().toISOString()
+          email: user.email ?? '',
+          name: (user.user_metadata?.name as string) ?? user.email ?? '',
+          created_at: user.created_at ?? new Date().toISOString(),
         });
       } finally {
         setProfileLoading(false);
@@ -62,63 +106,29 @@ const Dashboard = () => {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user?.id]);
 
   const handleLogout = async () => {
-    console.log('Dashboard: Logout button clicked');
-    
     try {
       await signOut();
       toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
       });
-      console.log('Dashboard: Logout successful');
     } catch (error) {
       console.error('Dashboard: Logout failed:', error);
       toast({
-        title: "Logout Error",
-        description: "There was an issue logging out. Please try again.",
-        variant: "destructive",
+        title: 'Logout Error',
+        description: 'There was an issue logging out. Please try again.',
+        variant: 'destructive',
       });
     }
   };
 
-  const stats = [
-    {
-      title: 'Total Projects',
-      value: '12',
-      description: 'Active projects',
-      icon: Activity,
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      title: 'Tasks Completed',
-      value: '48',
-      description: 'This month',
-      icon: Calendar,
-      color: 'from-green-500 to-emerald-500'
-    },
-    {
-      title: 'Team Members',
-      value: '6',
-      description: 'Collaborators',
-      icon: User,
-      color: 'from-purple-500 to-pink-500'
-    },
-    {
-      title: 'Notifications',
-      value: '3',
-      description: 'Unread messages',
-      icon: Bell,
-      color: 'from-orange-500 to-red-500'
-    }
-  ];
-
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
       </div>
     );
   }
@@ -134,20 +144,17 @@ const Dashboard = () => {
                 <User className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white" data-testid="dashboard-title">Dashboard</h1>
+                <h1 className="text-xl font-bold text-white" data-testid="dashboard-title">
+                  Dashboard
+                </h1>
                 <p className="text-gray-300 text-sm" data-testid="welcome-message">
-                  Welcome back, {profile?.name || user.email}!
+                  Welcome back, {profile?.name ?? user.email}!
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white/10"
-                data-testid="settings-button"
-              >
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" data-testid="settings-button">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </Button>
@@ -175,9 +182,7 @@ const Dashboard = () => {
               <User className="h-5 w-5" />
               <span>User Profile</span>
             </CardTitle>
-            <CardDescription className="text-gray-300">
-              Your account information and preferences
-            </CardDescription>
+            <CardDescription className="text-gray-300">Your account information and preferences</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -185,12 +190,16 @@ const Dashboard = () => {
                 <div className="flex items-center space-x-2">
                   <Mail className="h-4 w-4 text-purple-400" />
                   <span className="text-sm text-gray-300">Email:</span>
-                  <span className="text-sm font-medium" data-testid="user-email">{profile?.email || user.email}</span>
+                  <span className="text-sm font-medium" data-testid="user-email">
+                    {profile?.email ?? user.email}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <User className="h-4 w-4 text-purple-400" />
                   <span className="text-sm text-gray-300">Name:</span>
-                  <span className="text-sm font-medium" data-testid="user-name">{profile?.name || 'N/A'}</span>
+                  <span className="text-sm font-medium" data-testid="user-name">
+                    {profile?.name ?? 'N/A'}
+                  </span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -204,7 +213,9 @@ const Dashboard = () => {
                 <div className="flex items-center space-x-2">
                   <Activity className="h-4 w-4 text-purple-400" />
                   <span className="text-sm text-gray-300">Status:</span>
-                  <span className="text-sm font-medium text-green-400" data-testid="user-status">Active</span>
+                  <span className="text-sm font-medium text-green-400" data-testid="user-status">
+                    Active
+                  </span>
                 </div>
               </div>
             </div>
@@ -213,19 +224,20 @@ const Dashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" data-testid="stats-grid">
-          {stats.map((stat, index) => (
-            <Card key={index} className="bg-white/10 backdrop-blur-lg border-white/20 text-white hover:bg-white/15 transition-all duration-200 transform hover:scale-105">
+          {stats.map(({ title, value, description, icon: Icon, color }, index) => (
+            <Card
+              key={title}
+              className="bg-white/10 backdrop-blur-lg border-white/20 text-white hover:bg-white/15 transition-all duration-200 transform hover:scale-105"
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300">
-                  {stat.title}
-                </CardTitle>
-                <div className={`h-8 w-8 rounded-full bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
-                  <stat.icon className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-gray-300">{title}</CardTitle>
+                <div className={`h-8 w-8 rounded-full bg-gradient-to-r ${color} flex items-center justify-center`}>
+                  <Icon className="h-4 w-4 text-white" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-gray-400">{stat.description}</p>
+                <div className="text-2xl font-bold">{value}</div>
+                <p className="text-xs text-gray-400">{description}</p>
               </CardContent>
             </Card>
           ))}
@@ -238,9 +250,7 @@ const Dashboard = () => {
               <Activity className="h-5 w-5" />
               <span>Recent Activity</span>
             </CardTitle>
-            <CardDescription className="text-gray-300">
-              Your latest actions and updates
-            </CardDescription>
+            <CardDescription className="text-gray-300">Your latest actions and updates</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -248,15 +258,18 @@ const Dashboard = () => {
                 { action: 'Completed project review', time: '2 hours ago', icon: Calendar },
                 { action: 'Updated user profile', time: '1 day ago', icon: User },
                 { action: 'Sent team notification', time: '2 days ago', icon: Bell },
-                { action: 'Created new project', time: '3 days ago', icon: Activity }
-              ].map((activity, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                { action: 'Created new project', time: '3 days ago', icon: Activity },
+              ].map(({ action, time, icon: Icon }, index) => (
+                <div
+                  key={index}
+                  className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                >
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
-                    <activity.icon className="h-4 w-4 text-white" />
+                    <Icon className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-gray-400">{activity.time}</p>
+                    <p className="text-sm font-medium">{action}</p>
+                    <p className="text-xs text-gray-400">{time}</p>
                   </div>
                 </div>
               ))}
@@ -269,4 +282,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
