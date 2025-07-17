@@ -3,6 +3,9 @@ package com.auth.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entity representing a user in the authentication system.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -23,27 +26,31 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    // Constructors
+    /** 
+     * Default constructor required by JPA.
+     */
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // Timestamps set by lifecycle callbacks
     }
     
+    /**
+     * Parameterized constructor for easier user creation.
+     */
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
     }
-    
+
     // Getters and Setters
+    
     public Long getId() {
         return id;
     }
@@ -57,7 +64,9 @@ public class User {
     }
     
     public void setEmail(String email) {
-        this.email = email;
+        if(email != null) {
+            this.email = email;
+        }
     }
     
     public String getPassword() {
@@ -65,7 +74,9 @@ public class User {
     }
     
     public void setPassword(String password) {
-        this.password = password;
+        if(password != null) {
+            this.password = password;
+        }
     }
     
     public String getFirstName() {
@@ -99,7 +110,20 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    /**
+     * Sets creation and update timestamps before persisting.
+     */
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
     
+    /**
+     * Updates timestamp before updating entity.
+     */
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
