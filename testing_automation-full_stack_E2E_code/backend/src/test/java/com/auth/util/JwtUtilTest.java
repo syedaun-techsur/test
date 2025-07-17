@@ -1,5 +1,6 @@
 package com.auth.util;
 
+import com.auth.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -9,6 +10,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwtUtilTest {
 
     private JwtUtil jwtUtil;
+    private static final String TEST_EMAIL = "test@example.com";
+    private static final Long TEST_USER_ID = 1L;
+    private static final String INVALID_TOKEN = "invalid.token.here";
 
     @BeforeEach
     void setUp() {
@@ -19,74 +23,58 @@ class JwtUtilTest {
 
     @Test
     void testGenerateToken() {
-        String email = "test@example.com";
-        Long userId = 1L;
+        String token = jwtUtil.generateToken(TEST_EMAIL, TEST_USER_ID);
 
-        String token = jwtUtil.generateToken(email, userId);
-
-        assertNotNull(token);
-        assertFalse(token.isEmpty());
+        assertNotNull(token, "Generated token should not be null");
+        assertFalse(token.isEmpty(), "Generated token should not be empty");
     }
 
     @Test
     void testGetEmailFromToken() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
-
+        String token = jwtUtil.generateToken(TEST_EMAIL, TEST_USER_ID);
         String extractedEmail = jwtUtil.getEmailFromToken(token);
 
-        assertEquals(email, extractedEmail);
+        assertEquals(TEST_EMAIL, extractedEmail, "Extracted email should match the original email");
     }
 
     @Test
     void testGetUserIdFromToken() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
-
+        String token = jwtUtil.generateToken(TEST_EMAIL, TEST_USER_ID);
         Long extractedUserId = jwtUtil.getUserIdFromToken(token);
 
-        assertEquals(userId, extractedUserId);
+        assertEquals(TEST_USER_ID, extractedUserId, "Extracted userId should match the original userId");
     }
 
     @Test
     void testValidateTokenValid() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
-
+        String token = jwtUtil.generateToken(TEST_EMAIL, TEST_USER_ID);
         boolean isValid = jwtUtil.validateToken(token);
 
-        assertTrue(isValid);
+        assertTrue(isValid, "Token generated should be valid");
     }
 
     @Test
     void testValidateTokenInvalid() {
-        String invalidToken = "invalid.token.here";
+        boolean isValid = jwtUtil.validateToken(INVALID_TOKEN);
 
-        boolean isValid = jwtUtil.validateToken(invalidToken);
-
-        assertFalse(isValid);
+        assertFalse(isValid, "Invalid token should not be valid");
     }
 
     @Test
     void testIsTokenExpiredFalse() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
-
+        String token = jwtUtil.generateToken(TEST_EMAIL, TEST_USER_ID);
         boolean isExpired = jwtUtil.isTokenExpired(token);
 
-        assertFalse(isExpired);
+        assertFalse(isExpired, "Newly generated token should not be expired");
     }
 
     @Test
     void testIsTokenExpiredTrue() {
-        String invalidToken = "invalid.token.here";
+        // Using an invalid token to simulate expiration or invalidity.
+        // Since creating a truly expired token without manipulating JwtUtil code or system time is difficult,
+        // this test ensures invalid tokens are treated as expired.
+        boolean isExpired = jwtUtil.isTokenExpired(INVALID_TOKEN);
 
-        boolean isExpired = jwtUtil.isTokenExpired(invalidToken);
-
-        assertTrue(isExpired);
+        assertTrue(isExpired, "Invalid token should be treated as expired");
     }
 }
