@@ -13,67 +13,73 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
-    
+
     @Autowired
     private AuthService authService;
-    
+
     @Autowired
     private JwtUtil jwtUtil;
-    
+
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult) {
-        
+    public ResponseEntity<?> login(@Valid @RequestBody final LoginRequest loginRequest, final BindingResult bindingResult) {
+
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getFieldErrors()
+            final List<String> errors = bindingResult.getFieldErrors()
                     .stream()
                     .map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
-            
-            ErrorResponse errorResponse = new ErrorResponse(400, "Validation failed", errors);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+
+            final ErrorResponse errorResponse = new ErrorResponse(400, "Validation failed", errors);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
-        
+
         try {
-            LoginResponse response = authService.login(loginRequest);
+            final LoginResponse response = authService.login(loginRequest);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            ErrorResponse errorResponse = new ErrorResponse(401, e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            final ErrorResponse errorResponse = new ErrorResponse(401, e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
-    
+
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) final String token) {
         try {
-            // Remove "Bearer " prefix
-            String jwtToken = token.substring(7);
-            
-            if (!jwtUtil.validateToken(jwtToken)) {
-                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
-                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            if (token == null || !token.startsWith("Bearer ") || token.length() <= 7) {
+                final ErrorResponse errorResponse = new ErrorResponse(401, "Unauthorized");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
-            
-            String email = jwtUtil.getEmailFromToken(jwtToken);
-            UserDto user = authService.getUserByEmail(email);
-            
+
+            final String jwtToken = token.substring(7);
+
+            if (!jwtUtil.validateToken(jwtToken)) {
+                final ErrorResponse errorResponse = new ErrorResponse(401, "Unauthorized");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+            }
+
+            final String email = jwtUtil.getEmailFromToken(jwtToken);
+            final UserDto user = authService.getUserByEmail(email);
+
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
-            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            final ErrorResponse errorResponse = new ErrorResponse(401, "Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
-    
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         // In a real application, you might want to blacklist the token
         // For now, we'll just return a success message
-        return ResponseEntity.ok().body("{\"message\": \"Logout successful\"}");
+        return ResponseEntity.ok(Collections.singletonMap("message", "Logout successful"));
     }
 }
