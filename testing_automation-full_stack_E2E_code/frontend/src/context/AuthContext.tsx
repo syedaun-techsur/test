@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 interface User {
   id: number;
@@ -9,7 +9,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   isLoading: boolean;
@@ -31,17 +30,16 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing token on app startup
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    const savedUser = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('user='))
+      ?.split('=')[1];
+    if (savedUser) {
+      setUser(JSON.parse(decodeURIComponent(savedUser)));
     }
     setIsLoading(false);
   }, []);
@@ -60,10 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
 
       if (response.ok) {
-        setToken(data.token);
         setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        document.cookie = `user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; HttpOnly; SameSite=Lax`;
         return { success: true };
       } else {
         return { success: false, message: data.message || 'Login failed' };
@@ -77,18 +73,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; HttpOnly; SameSite=Lax';
   };
 
-  const value = {
+  const value = useMemo(() => ({
     user,
-    token,
     login,
     logout,
     isLoading,
-  };
+  }), [user, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
