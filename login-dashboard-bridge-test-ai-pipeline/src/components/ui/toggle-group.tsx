@@ -1,5 +1,5 @@
 import * as React from "react"
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
+import { ToggleGroup } from "radix-ui"
 import { type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -12,33 +12,34 @@ const ToggleGroupContext = React.createContext<
   variant: "default",
 })
 
-const ToggleGroup = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> &
+const ToggleGroupRoot = React.forwardRef<
+  React.ElementRef<typeof ToggleGroup.Root>,
+  React.ComponentPropsWithoutRef<typeof ToggleGroup.Root> &
     VariantProps<typeof toggleVariants>
 >(({ className, variant, size, children, ...props }, ref) => (
-  <ToggleGroupPrimitive.Root
+  <ToggleGroup.Root
     ref={ref}
     className={cn("flex items-center justify-center gap-1", className)}
+    role="radiogroup"
     {...props}
   >
     <ToggleGroupContext.Provider value={{ variant, size }}>
       {children}
     </ToggleGroupContext.Provider>
-  </ToggleGroupPrimitive.Root>
+  </ToggleGroup.Root>
 ))
 
-ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
+ToggleGroupRoot.displayName = "ToggleGroupRoot"
 
 const ToggleGroupItem = React.forwardRef<
-  React.ElementRef<typeof ToggleGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Item> &
+  React.ElementRef<typeof ToggleGroup.Item>,
+  React.ComponentPropsWithoutRef<typeof ToggleGroup.Item> &
     VariantProps<typeof toggleVariants>
 >(({ className, children, variant, size, ...props }, ref) => {
   const context = React.useContext(ToggleGroupContext)
 
   return (
-    <ToggleGroupPrimitive.Item
+    <ToggleGroup.Item
       ref={ref}
       className={cn(
         toggleVariants({
@@ -50,11 +51,10 @@ const ToggleGroupItem = React.forwardRef<
       {...props}
     >
       {children}
-    </ToggleGroupPrimitive.Item>
+    </ToggleGroup.Item>
   )
 })
 
-ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
+ToggleGroupItem.displayName = "ToggleGroupItem"
 
-export { ToggleGroup, ToggleGroupItem }
-
+export { ToggleGroupRoot as ToggleGroup, ToggleGroupItem }
