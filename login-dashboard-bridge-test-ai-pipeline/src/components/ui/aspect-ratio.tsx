@@ -1,6 +1,10 @@
-import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio"
+import { Root as AspectRatioRoot, AspectRatioProps } from "@radix-ui/react-aspect-ratio";
 
-const AspectRatio = AspectRatioPrimitive.Root
+/**
+ * AspectRatio component enforces a consistent aspect ratio for its child content.
+ * Wraps Radix UI's AspectRatio primitive Root component.
+ */
+const AspectRatio = AspectRatioRoot;
 
-export { AspectRatio }
-
+export type { AspectRatioProps };
+export { AspectRatio };
