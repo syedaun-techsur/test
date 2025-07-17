@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { AuthProvider } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch with proper typing
+const mockedFetch = vi.fn();
+global.fetch = mockedFetch as unknown as typeof fetch;
 
 const MockedLoginForm = () => (
   <BrowserRouter>
@@ -19,7 +20,11 @@ const MockedLoginForm = () => (
 describe('LoginForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
   it('renders login form with all required elements', () => {
@@ -56,10 +61,8 @@ describe('LoginForm', () => {
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
     
-    // Submit the form directly instead of clicking the button
     fireEvent.submit(loginForm);
     
-    // Use findByTestId to wait for the error to appear
     const emailError = await screen.findByTestId('email-error');
     expect(emailError).toHaveTextContent('Please enter a valid email address');
   });
@@ -101,10 +104,10 @@ describe('LoginForm', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    mockedFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
-    });
+    } as Response);
     
     render(<MockedLoginForm />);
     
@@ -127,14 +130,12 @@ describe('LoginForm', () => {
 
   it('shows error message on login failure', async () => {
     const user = userEvent.setup();
-    const mockErrorResponse = {
-      message: 'Invalid email or password'
-    };
+    const mockErrorResponse = { message: 'Invalid email or password' };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    mockedFetch.mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
-    });
+    } as Response);
     
     render(<MockedLoginForm />);
     
