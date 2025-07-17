@@ -1,39 +1,38 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AuthProvider>
-        <Router>
-          <Routes>
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="min-h-screen bg-gray-50">
+          <Switch>
             {/* Default route redirects to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            
+            <Route exact path="/">
+              <Redirect to="/login" />
+            </Route>
+
             {/* Login route */}
-            <Route path="/login" element={<LoginForm />} />
-            
+            <Route path="/login" component={LoginForm} />
+
             {/* Protected dashboard route */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            
+            <ProtectedRoute path="/dashboard">
+              <Dashboard />
+            </ProtectedRoute>
+
             {/* Catch all route redirects to login */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
-    </div>
+            <Route path="*">
+              <Redirect to="/login" />
+            </Route>
+          </Switch>
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
