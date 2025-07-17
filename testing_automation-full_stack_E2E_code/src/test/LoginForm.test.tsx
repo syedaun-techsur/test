@@ -5,8 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { AuthProvider } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch with proper type assertion
+(global as unknown as { fetch: jest.Mock }) = vi.fn();
 
 const MockedLoginForm = () => (
   <BrowserRouter>
@@ -52,14 +52,14 @@ describe('LoginForm', () => {
     const passwordInput = screen.getByTestId('password-input');
     const loginForm = screen.getByTestId('login-form');
     
+    // Clear email input value by selecting all and deleting
     await user.clear(emailInput);
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
     
-    // Submit the form directly instead of clicking the button
+    // Submit the form and wait for validation error asynchronously
     fireEvent.submit(loginForm);
     
-    // Use findByTestId to wait for the error to appear
     const emailError = await screen.findByTestId('email-error');
     expect(emailError).toHaveTextContent('Please enter a valid email address');
   });
@@ -101,7 +101,7 @@ describe('LoginForm', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -131,7 +131,7 @@ describe('LoginForm', () => {
       message: 'Invalid email or password'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
