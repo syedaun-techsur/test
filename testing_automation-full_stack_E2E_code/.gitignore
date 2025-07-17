@@ -1,19 +1,39 @@
+# Node dependencies and build output
 /node_modules
 /dist
 /build
 /target
+
+# Logs and temporary files
 /logs
 /tmp
+/temp
+/cache
+
+# Data, config, and backup directories
 /data
 /config
 /backup
-/cache
-/temp
+
+# Backend and database related
+/backend
+/supabase
+/database
+
+# Environment variables files
 .env
+.env.local
+.env.*.local
+
+# Ignore nested node_modules/build folders from subprojects
 **/node_modules
 **/dist
 **/build
 **/target
-/backend
-/supabase
-/database
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
