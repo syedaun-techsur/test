@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Create an index on email for faster lookups
@@ -31,7 +31,7 @@ VALUES (
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at = clock_timestamp();
     RETURN NEW;
 END;
 $$ language 'plpgsql';
