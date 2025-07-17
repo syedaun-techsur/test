@@ -14,32 +14,36 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
-    
+
+    private final AuthService authService;
+    private final JwtUtil jwtUtil;
+
     @Autowired
-    private AuthService authService;
-    
-    @Autowired
-    private JwtUtil jwtUtil;
-    
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
+        this.authService = authService;
+        this.jwtUtil = jwtUtil;
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult) {
-        
+
         if (bindingResult.hasErrors()) {
             List<String> errors = bindingResult.getFieldErrors()
                     .stream()
                     .map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
-            
+
             ErrorResponse errorResponse = new ErrorResponse(400, "Validation failed", errors);
             return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
-        
+
         try {
             LoginResponse response = authService.login(loginRequest);
             return ResponseEntity.ok(response);
@@ -48,32 +52,36 @@ public class AuthController {
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
     }
-    
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
         try {
-            // Remove "Bearer " prefix
+            if (token == null || token.length() < 8 || !token.startsWith("Bearer ")) {
+                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid or missing Authorization header");
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            }
+
             String jwtToken = token.substring(7);
-            
+
             if (!jwtUtil.validateToken(jwtToken)) {
                 ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
                 return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
             }
-            
+
             String email = jwtUtil.getEmailFromToken(jwtToken);
             UserDto user = authService.getUserByEmail(email);
-            
+
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
     }
-    
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         // In a real application, you might want to blacklist the token
-        // For now, we'll just return a success message
-        return ResponseEntity.ok().body("{\"message\": \"Logout successful\"}");
+        // For now, we'll just return a success message JSON object
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
     }
 }
