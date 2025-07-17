@@ -1,19 +1,38 @@
-/node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Build output directories
+build/
+**/build/
+dist/
+**/dist/
+target/
+**/target/
+
+# Logs and temporary files
+logs/
+tmp/
+temp/
+cache/
+
+# Data and database folders
+data/
+database/
+supabase/
+
+# Configuration and backup folders
+config/
+backup/
+backend/
+
+# Environment files
 .env
-**/node_modules
-**/dist
-**/build
-**/target
-/backend
-/database
-/supabase
+
+# OS generated files (macOS, Windows)
+.DS_Store
+Thumbs.db
+
+# IDE and editor folders
+.vscode/
+.idea/
