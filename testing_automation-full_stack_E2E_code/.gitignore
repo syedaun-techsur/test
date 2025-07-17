@@ -10,4 +10,7 @@
 /cache
 /temp
 .env
-/frontend
+**/node_modules
+**/dist
+**/build
+**/target
