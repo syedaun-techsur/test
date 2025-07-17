@@ -17,26 +17,48 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
+
+    /**
+     * Bean to provide a PasswordEncoder instance.
+     * 
+     * @return a BCryptPasswordEncoder instance
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
+
+    /**
+     * Bean to configure the SecurityFilterChain with custom settings.
+     * 
+     * @param http the HttpSecurity instance
+     * @return the configured SecurityFilterChain
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // Configure CORS
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // Disable CSRF protection
             .csrf(csrf -> csrf.disable())
+            // Set session management to stateless
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Configure authorization rules
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/login").permitAll()
-                .requestMatchers("/api/logout").permitAll()
+                .requestMatchers("/api/login", "/api/logout").permitAll()
                 .anyRequest().authenticated()
-            );
-        
+            )
+            // Permit OPTIONS requests for CORS pre-flight
+            .requestMatchers(HttpMethod.OPTIONS).permitAll();
+
         return http.build();
     }
-    
+
+    /**
+     * Bean to provide a CorsConfigurationSource with custom settings.
+     * 
+     * @return the CorsConfigurationSource
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -44,7 +66,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
