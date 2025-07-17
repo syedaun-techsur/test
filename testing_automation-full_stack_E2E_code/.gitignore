@@ -1,18 +1,36 @@
+# Dependency directories
 /node_modules
+
+# Build output directories
 /dist
 /build
 /target
+
+# Logs and temporary files
 /logs
 /tmp
+/temp
+/cache
+
+# Data and config directories
 /data
 /config
 /backup
-/cache
-/temp
-.env
-**/node_modules
-**/dist
-**/build
-**/target
+
+# Supabase service config
 /supabase
-/database
+
+# Environment variables
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
