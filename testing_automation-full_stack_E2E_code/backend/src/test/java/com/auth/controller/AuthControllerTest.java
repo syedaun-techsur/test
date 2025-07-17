@@ -14,6 +14,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.naming.AuthenticationException;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -63,8 +65,9 @@ class AuthControllerTest {
 
     @Test
     void testLoginWithInvalidCredentials() throws Exception {
+        // Use a more appropriate exception to simulate authentication failure.
         when(authService.login(any(LoginRequest.class)))
-                .thenThrow(new RuntimeException("Invalid email or password"));
+                .thenThrow(new AuthenticationException("Invalid email or password"));
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -88,14 +91,15 @@ class AuthControllerTest {
 
     @Test
     void testGetCurrentUserSuccess() throws Exception {
-        String token = "Bearer mock-token";
-        
-        when(jwtUtil.validateToken("mock-token")).thenReturn(true);
-        when(jwtUtil.getEmailFromToken("mock-token")).thenReturn("admin@example.com");
+        String rawToken = "mock-token";
+        String bearerToken = "Bearer " + rawToken;
+
+        when(jwtUtil.validateToken(rawToken)).thenReturn(true);
+        when(jwtUtil.getEmailFromToken(rawToken)).thenReturn("admin@example.com");
         when(authService.getUserByEmail("admin@example.com")).thenReturn(userDto);
 
         mockMvc.perform(get("/api/auth/me")
-                .header("Authorization", token))
+                .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("admin@example.com"))
                 .andExpect(jsonPath("$.firstName").value("John"))
@@ -104,12 +108,13 @@ class AuthControllerTest {
 
     @Test
     void testGetCurrentUserWithInvalidToken() throws Exception {
-        String token = "Bearer invalid-token";
-        
-        when(jwtUtil.validateToken("invalid-token")).thenReturn(false);
+        String rawToken = "invalid-token";
+        String bearerToken = "Bearer " + rawToken;
+
+        when(jwtUtil.validateToken(rawToken)).thenReturn(false);
 
         mockMvc.perform(get("/api/auth/me")
-                .header("Authorization", token))
+                .header("Authorization", bearerToken))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message").value("Invalid token"));
