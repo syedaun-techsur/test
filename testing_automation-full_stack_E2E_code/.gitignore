@@ -1,19 +1,46 @@
+# Dependency directories
 /node_modules
+**/node_modules
+
+# Build output
 /dist
+**/dist
+
 /build
+**/build
+
 /target
+**/target
+
+# Logs and temp files
 /logs
 /tmp
-/data
-/config
-/backup
-/cache
 /temp
+/cache
+
+# Data and backups
+/data
+/backup
+
+# Configuration files and environment variables
+/config
 .env
-**/node_modules
-**/dist
-**/build
-**/target
+.env.local
+.env.*.local
+
+# Frontend build or assets
 /frontend
+
+# Supabase specific directory
 /supabase
+
+# Database files and folders
 /database
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDE and editor folders
+.idea/
+.vscode/
