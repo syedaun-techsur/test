@@ -23,6 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
 
+    private static final String MOCK_TOKEN = "mock-token";
+    private static final String AUTH_HEADER_PREFIX = "Bearer ";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -43,7 +46,7 @@ class AuthControllerTest {
     void setUp() {
         validLoginRequest = new LoginRequest("admin@example.com", "password123");
         userDto = new UserDto(1L, "admin@example.com", "John", "Doe");
-        loginResponse = new LoginResponse("mock-token", userDto, "Login successful");
+        loginResponse = new LoginResponse(MOCK_TOKEN, userDto, "Login successful");
     }
 
     @Test
@@ -54,7 +57,7 @@ class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("mock-token"))
+                .andExpect(jsonPath("$.token").value(MOCK_TOKEN))
                 .andExpect(jsonPath("$.user.email").value("admin@example.com"))
                 .andExpect(jsonPath("$.user.firstName").value("John"))
                 .andExpect(jsonPath("$.user.lastName").value("Doe"))
@@ -76,6 +79,7 @@ class AuthControllerTest {
 
     @Test
     void testLoginWithValidationErrors() throws Exception {
+        // Assuming validation annotations on LoginRequest fields on server side, e.g., @NotBlank, @Size
         LoginRequest invalidRequest = new LoginRequest("", "123");
 
         mockMvc.perform(post("/api/auth/login")
@@ -88,10 +92,10 @@ class AuthControllerTest {
 
     @Test
     void testGetCurrentUserSuccess() throws Exception {
-        String token = "Bearer mock-token";
+        String token = AUTH_HEADER_PREFIX + MOCK_TOKEN;
         
-        when(jwtUtil.validateToken("mock-token")).thenReturn(true);
-        when(jwtUtil.getEmailFromToken("mock-token")).thenReturn("admin@example.com");
+        when(jwtUtil.validateToken(MOCK_TOKEN)).thenReturn(true);
+        when(jwtUtil.getEmailFromToken(MOCK_TOKEN)).thenReturn("admin@example.com");
         when(authService.getUserByEmail("admin@example.com")).thenReturn(userDto);
 
         mockMvc.perform(get("/api/auth/me")
@@ -104,12 +108,12 @@ class AuthControllerTest {
 
     @Test
     void testGetCurrentUserWithInvalidToken() throws Exception {
-        String token = "Bearer invalid-token";
+        String invalidToken = AUTH_HEADER_PREFIX + "invalid-token";
         
         when(jwtUtil.validateToken("invalid-token")).thenReturn(false);
 
         mockMvc.perform(get("/api/auth/me")
-                .header("Authorization", token))
+                .header("Authorization", invalidToken))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message").value("Invalid token"));
@@ -119,6 +123,6 @@ class AuthControllerTest {
     void testLogout() throws Exception {
         mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("{\"message\": \"Logout successful\"}"));
+                .andExpect(content().json("{\"message\": \"Logout successful\"}"));
     }
 }
