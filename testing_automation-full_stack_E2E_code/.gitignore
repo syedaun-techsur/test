@@ -1,14 +1,47 @@
+# Dependencies
 /node_modules
-/dist
+
+# Build outputs
 /build
+/dist
 /target
+
+# Logs
 /logs
-/tmp
-/data
-/config
-/backup
+
+# Temporary files
 /cache
+/tmp
 /temp
-.env
-/backend
+
+# Data and backup
+/data
+/backup
+
+# Config and database
+/config
 /database
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Coverage reports
+/coverage
+
+# Testing
+/.nyc_output
+/.cache
+/jest-cache
+/jest-coverage
+
+# IDEs and editors
+.vscode/
+*.code-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
