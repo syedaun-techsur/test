@@ -1,10 +1,11 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 // Test component that uses the auth context
 const TestComponent = () => {
@@ -32,19 +33,20 @@ describe('AuthContext', () => {
     localStorage.clear();
   });
 
-  it('provides initial state correctly', () => {
+  it('provides initial state correctly', async () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
-    expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+
+    // Using findBy to await any async updates if needed
+    expect(await screen.findByTestId('loading')).toHaveTextContent('Not Loading');
     expect(screen.getByTestId('user')).toHaveTextContent('No User');
     expect(screen.getByTestId('token')).toHaveTextContent('No Token');
   });
 
-  it('loads user from localStorage on initialization', () => {
+  it('loads user from localStorage on initialization', async () => {
     const mockUser = { id: 1, email: 'test@example.com', firstName: 'John', lastName: 'Doe' };
     const mockToken = 'mock-token';
     
@@ -56,8 +58,8 @@ describe('AuthContext', () => {
         <TestComponent />
       </AuthProvider>
     );
-    
-    expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
+
+    expect(await screen.findByTestId('user')).toHaveTextContent('John Doe');
     expect(screen.getByTestId('token')).toHaveTextContent('mock-token');
   });
 
@@ -69,11 +71,11 @@ describe('AuthContext', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
-    
+
     render(
       <AuthProvider>
         <TestComponent />
@@ -98,7 +100,7 @@ describe('AuthContext', () => {
       message: 'Invalid credentials'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
@@ -132,7 +134,6 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
     
-    // Verify user is logged in
     expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
     
     const logoutButton = screen.getByTestId('logout-btn');
