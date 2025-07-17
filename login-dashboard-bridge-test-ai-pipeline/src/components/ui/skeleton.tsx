@@ -1,9 +1,14 @@
+import React from "react"
 import { cn } from "@/lib/utils"
 
-function Skeleton({
+/**
+ * Skeleton component to display a loading placeholder with animation.
+ * It accepts all standard div HTML attributes.
+ */
+const Skeleton: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}) => {
   return (
     <div
       className={cn("animate-pulse rounded-md bg-muted", className)}
@@ -13,4 +18,4 @@ function Skeleton({
 }
 
 export { Skeleton }
-
+export default Skeleton
