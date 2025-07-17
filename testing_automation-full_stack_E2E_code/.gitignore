@@ -1,13 +1,24 @@
-/node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
+/node_modules/
+/dist/
+/build/
+/target/
+/logs/
+/tmp/
+/data/
+/config/
+/backup/
+/cache/
+/temp/
 .env
-/frontend
+/frontend/
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# OS system files
+.DS_Store
+Thumbs.db
+
+# Test coverage directory
+coverage/
