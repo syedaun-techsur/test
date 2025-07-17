@@ -2,59 +2,85 @@ package com.auth.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Represents a standardized error response.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
-    private int status;
-    private String message;
-    private LocalDateTime timestamp;
-    private List<String> errors;
-    
-    // Constructors
-    public ErrorResponse() {
-        this.timestamp = LocalDateTime.now();
-    }
-    
+
+    @JsonProperty("status")
+    private final int status;
+
+    @JsonProperty("message")
+    private final String message;
+
+    @JsonProperty("timestamp")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private final LocalDateTime timestamp;
+
+    @JsonProperty("errors")
+    private final List<String> errors;
+
+    /**
+     * Constructs an ErrorResponse with status and message.
+     * Timestamp is set to current time.
+     *
+     * @param status  the HTTP status code
+     * @param message the error message
+     */
     public ErrorResponse(int status, String message) {
-        this();
+        this(status, message, null, LocalDateTime.now());
+    }
+
+    /**
+     * Constructs an ErrorResponse with status, message, and errors list.
+     * Timestamp is set to current time.
+     *
+     * @param status  the HTTP status code
+     * @param message the error message
+     * @param errors  optional list of detailed error messages
+     */
+    public ErrorResponse(int status, String message, List<String> errors) {
+        this(status, message, errors, LocalDateTime.now());
+    }
+
+    /**
+     * Full constructor with all fields.
+     *
+     * @param status    the HTTP status code
+     * @param message   the error message
+     * @param errors    optional list of detailed error messages
+     * @param timestamp the timestamp of the error occurrence
+     */
+    public ErrorResponse(int status, String message, List<String> errors, LocalDateTime timestamp) {
+        if (message == null || message.trim().isEmpty()) {
+            throw new IllegalArgumentException("message cannot be null or empty");
+        }
         this.status = status;
         this.message = message;
-    }
-    
-    public ErrorResponse(int status, String message, List<String> errors) {
-        this(status, message);
         this.errors = errors;
+        this.timestamp = Objects.requireNonNull(timestamp, "timestamp cannot be null");
     }
-    
-    // Getters and Setters
+
     public int getStatus() {
         return status;
     }
-    
-    public void setStatus(int status) {
-        this.status = status;
-    }
-    
+
     public String getMessage() {
         return message;
     }
-    
-    public void setMessage(String message) {
-        this.message = message;
-    }
-    
+
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
-    
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-    
+
     public List<String> getErrors() {
         return errors;
-    }
-    
-    public void setErrors(List<String> errors) {
-        this.errors = errors;
     }
 }
