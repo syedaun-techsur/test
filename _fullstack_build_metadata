@@ -1,0 +1,7 @@
+{
+  "project_type": "fullstack",
+  "npm_build_status": "ALL BUILDS FAILED",
+  "maven_build_status": "ALL MAVEN BUILDS SUCCESSFUL",
+  "overall_status": "npm: ALL BUILDS FAILED",
+  "timestamp": "fullstack_processing_completed"
+}
