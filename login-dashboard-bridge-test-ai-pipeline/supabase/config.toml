@@ -1,1 +1,14 @@
+# Supabase Project Configuration
+
+# Unique project identifier for Supabase backend
 project_id = "kdwcykeazhjocufxbjig"
+
+# Typical configuration might also include the Supabase URL and API keys, 
+# uncomment and set if required for local or deployment use:
+# supabase_url = "https://your-project.supabase.co"
+# supabase_key = "your-anon-or-service-role-key"
+
+# Optional environment setting can be added if needed:
+# env = "development"  # or "production"
+
+# Additional settings can be included here as needed by the project or extended pipeline
