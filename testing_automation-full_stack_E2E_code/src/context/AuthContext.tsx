@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from "react";
 
 interface User {
   id: number;
@@ -15,79 +22,97 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
+const API_LOGIN_URL = "http://localhost:8080/api/login";
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
 interface AuthProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }): JSX.Element => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check for existing token on app startup
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
+    const savedToken = localStorage.getItem("authToken");
+    const savedUser = localStorage.getItem("user");
+
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsedUser: User = JSON.parse(savedUser);
+        setToken(savedToken);
+        setUser(parsedUser);
+      } catch {
+        // If parsing fails, clear potentially corrupted storage
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+      }
     }
-    setIsLoading(false);
+    setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('http://localhost:8080/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  const login = useCallback(
+    async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+      setLoading(true);
+      try {
+        const response = await fetch(API_LOGIN_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-      const data = await response.json();
+        let data: any;
+        try {
+          data = await response.json();
+        } catch {
+          setLoading(false);
+          return { success: false, message: "Invalid server response" };
+        }
 
-      if (response.ok) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        return { success: true };
-      } else {
-        return { success: false, message: data.message || 'Login failed' };
+        if (response.ok) {
+          setToken(data.token);
+          setUser(data.user);
+          localStorage.setItem("authToken", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          setLoading(false);
+          return { success: true };
+        } else {
+          setLoading(false);
+          return { success: false, message: data.message || "Login failed" };
+        }
+      } catch {
+        setLoading(false);
+        return { success: false, message: "Network error. Please try again." };
       }
-    } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' };
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    []
+  );
 
-  const logout = () => {
+  const logout = useCallback((): void => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-  };
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+  }, []);
 
-  const value = {
+  const value: AuthContextType = {
     user,
     token,
     login,
     logout,
-    isLoading,
+    isLoading: loading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
