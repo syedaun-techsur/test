@@ -48,7 +48,7 @@ const LoginForm: React.FC = () => {
     return newErrors;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
@@ -56,15 +56,13 @@ const LoginForm: React.FC = () => {
       const newErrors = { ...prev };
       if (name === 'email') {
         if (validateEmail(value)) {
-          newErrors.email = undefined;
+          delete newErrors.email;
         }
-        // else, do not clear error
       }
       if (name === 'password') {
         if (value.length >= 6) {
-          newErrors.password = undefined;
+          delete newErrors.password;
         }
-        // else, do not clear error
       }
       return newErrors;
     });
@@ -72,7 +70,7 @@ const LoginForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -80,17 +78,16 @@ const LoginForm: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    setErrors({});
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
       // Redirect to dashboard on successful login
       navigate('/dashboard', { replace: true });
     } else {
       setErrors({ submit: result.message });
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -131,10 +128,14 @@ const LoginForm: React.FC = () => {
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your email"
                 data-testid="email-input"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : undefined}
               />
             </div>
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1" data-testid="email-error">{errors.email}</p>
+              <p className="text-red-600 text-sm mt-1" data-testid="email-error" id="email-error">
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -157,12 +158,15 @@ const LoginForm: React.FC = () => {
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your password"
                 data-testid="password-input"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
               />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
                 data-testid="toggle-password"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -171,7 +175,11 @@ const LoginForm: React.FC = () => {
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1" data-testid="password-error" id="password-error">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <button
@@ -192,9 +200,7 @@ const LoginForm: React.FC = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Demo credentials: admin@example.com / password123
-          </p>
+          <p className="text-sm text-gray-600">Demo credentials: admin@example.com / password123</p>
         </div>
       </div>
     </div>
