@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
+  readonly id: number;
+  readonly email: string;
+  readonly firstName: string;
+  readonly lastName: string;
 }
 
 interface AuthContextType {
@@ -34,61 +34,78 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // On mount, load token and user from localStorage safely
   useEffect(() => {
-    // Check for existing token on app startup
-    const savedToken = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
-      setIsLoading(true);
-      const response = await fetch('http://localhost:8080/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const savedToken = localStorage.getItem('authToken');
+      const savedUser = localStorage.getItem('user');
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        return { success: true };
-      } else {
-        return { success: false, message: data.message || 'Login failed' };
+      if (savedToken && savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+        if (parsedUser) {
+          setToken(savedToken);
+          setUser(parsedUser);
+        }
       }
-    } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' };
+    } catch (e) {
+      console.error('Failed to parse auth data from localStorage:', e);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
+  // Login function wrapped with useCallback to improve performance
+  const login = useCallback(
+    async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('http://localhost:8080/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data: { token?: string; user?: User; message?: string } = await response.json();
+
+        if (response.ok && data.token && data.user) {
+          setToken(data.token);
+          setUser(data.user);
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          return { success: true };
+        } else {
+          console.error('Login failed:', data.message);
+          return { success: false, message: data.message || 'Login failed' };
+        }
+      } catch (error) {
+        console.error('Network error during login:', error);
+        return { success: false, message: 'Network error. Please try again.' };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  // Logout function wrapped with useCallback
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-  };
+  }, []);
 
-  const value = {
-    user,
-    token,
-    login,
-    logout,
-    isLoading,
-  };
+  // Memoize context value to avoid unnecessary re-renders
+  const value = useMemo(
+    () => ({
+      user,
+      token,
+      login,
+      logout,
+      isLoading,
+    }),
+    [user, token, login, logout, isLoading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
