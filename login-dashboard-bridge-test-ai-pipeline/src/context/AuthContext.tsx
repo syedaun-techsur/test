@@ -1,13 +1,12 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
@@ -31,11 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!session && !!user;
 
   useEffect(() => {
-    console.log('AuthContext: Setting up Supabase auth listener');
-
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('AuthContext: Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
@@ -44,12 +40,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthContext: Initial session:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const fetchSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('AuthContext: Error fetching initial session:', error.message);
+      } else {
+        console.log('AuthContext: Initial session:', session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    };
+
+    fetchSession();
 
     return () => {
       console.log('AuthContext: Cleaning up auth listener');
@@ -59,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, name: string) => {
     console.log('AuthContext: Sign up attempt for:', email);
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -72,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (error) {
-      console.error('AuthContext: Sign up failed:', error);
+      console.error('AuthContext: Sign up failed:', error.message);
     } else {
       console.log('AuthContext: Sign up successful');
     }
@@ -82,14 +85,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     console.log('AuthContext: Sign in attempt for:', email);
-    
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      console.error('AuthContext: Sign in failed:', error);
+      console.error('AuthContext: Sign in failed:', error.message);
     } else {
       console.log('AuthContext: Sign in successful');
     }
@@ -99,11 +102,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     console.log('AuthContext: Sign out initiated');
-    
+
     const { error } = await supabase.auth.signOut();
-    
+
     if (error) {
-      console.error('AuthContext: Sign out failed:', error);
+      console.error('AuthContext: Sign out failed:', error.message);
     } else {
       console.log('AuthContext: Sign out successful');
     }
@@ -125,4 +128,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
