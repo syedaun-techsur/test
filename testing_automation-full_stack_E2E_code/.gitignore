@@ -1,17 +1,27 @@
-/node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
-.env
+# Dependency directories
 **/node_modules
+
+# Build output directories
 **/dist
 **/build
 **/target
-/frontend
+
+# Logs and temporary files
+logs/
+tmp/
+temp/
+cache/
+**/logs
+**/tmp
+**/temp
+**/cache
+
+# Data and backup folders
+data/
+backup/
+config/
+
+# Environment files
+.env
+.env.local
+.env.*.local
