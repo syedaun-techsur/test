@@ -1,8 +1,5 @@
--- Create database
-CREATE DATABASE auth_db;
-
--- Connect to the database
-\c auth_db;
+-- NOTE: Database creation should not be part of migration scripts.
+-- Connect to the appropriate database before running migrations.
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
@@ -11,8 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create an index on email for faster lookups
@@ -27,17 +24,37 @@ VALUES (
     'Doe'
 ) ON CONFLICT (email) DO NOTHING;
 
--- Function to automatically update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+-- Function to automatically update updated_at timestamp before update
+DO $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_proc 
+        WHERE proname = 'update_updated_at_column'
+          AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+    ) THEN
+        CREATE FUNCTION update_updated_at_column()
+        RETURNS TRIGGER AS $func$
+        BEGIN
+            NEW.updated_at = CURRENT_TIMESTAMP;
+            RETURN NEW;
+        END;
+        $func$ LANGUAGE plpgsql;
+    END IF;
 END;
-$$ language 'plpgsql';
+$$;
 
--- Trigger to automatically update updated_at
-CREATE TRIGGER update_users_updated_at 
-    BEFORE UPDATE ON users 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
+-- Trigger to automatically update updated_at on users table before update
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger
+        WHERE tgname = 'update_users_updated_at'
+          AND tgrelid = 'users'::regclass
+    ) THEN
+        CREATE TRIGGER update_users_updated_at 
+        BEFORE UPDATE ON users 
+        FOR EACH ROW 
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END;
+$$;
