@@ -1,41 +1,57 @@
 package com.auth.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
-public class LoginRequest {
-    
+/**
+ * Data Transfer Object for login requests.
+ * Contains user email and password with validation constraints.
+ */
+public final class LoginRequest {
+
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
-    private String email;
-    
+    private final String email;
+
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
-    private String password;
-    
-    // Constructors
-    public LoginRequest() {}
-    
+    private final String password;
+
+    /**
+     * Constructs a new LoginRequest with the specified email and password.
+     *
+     * @param email    the user's email address
+     * @param password the user's password
+     */
     public LoginRequest(String email, String password) {
         this.email = email;
         this.password = password;
     }
-    
-    // Getters and Setters
+
+    /**
+     * Returns the email of the user.
+     *
+     * @return email address
+     */
     public String getEmail() {
         return email;
     }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
+
+    /**
+     * Returns the password of the user.
+     *
+     * @return password string
+     */
     public String getPassword() {
         return password;
     }
-    
-    public void setPassword(String password) {
-        this.password = password;
+
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+               "email='" + email + '\'' +
+               ", password='[PROTECTED]'" +
+               '}';
     }
 }
