@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter, useNavigate } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import Dashboard from '../components/Dashboard';
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import { User, LogOut } from 'lucide-react';
 
 // Mock the useAuth hook
+const mockLogout = vi.fn();
+
 vi.mock('../context/AuthContext', async () => {
   const actual = await vi.importActual('../context/AuthContext');
   return {
@@ -18,7 +18,7 @@ vi.mock('../context/AuthContext', async () => {
         firstName: 'John',
         lastName: 'Doe'
       },
-      logout: vi.fn(),
+      logout: mockLogout,
       token: 'mock-token',
       isLoading: false
     })
@@ -60,12 +60,12 @@ describe('Dashboard', () => {
 
   it('displays statistics cards', () => {
     renderDashboard();
+    
     expect(screen.getByTestId('stat-card-0')).toBeInTheDocument();
     expect(screen.getByTestId('stat-card-1')).toBeInTheDocument();
     expect(screen.getByTestId('stat-card-2')).toBeInTheDocument();
     expect(screen.getByText('Total Projects')).toBeInTheDocument();
     expect(screen.getByText('Active Tasks')).toBeInTheDocument();
-    // Use getAllByText for Notifications
     expect(screen.getAllByText('Notifications').length).toBeGreaterThan(0);
   });
 
@@ -78,57 +78,9 @@ describe('Dashboard', () => {
   });
 
   it('calls logout function when logout button is clicked', async () => {
+    renderDashboard();
+    
     const user = userEvent.setup();
-    const mockLogout = vi.fn();
-    
-    // Create a custom Dashboard component with the mock logout
-    const CustomDashboard = () => {
-      const { user } = useAuth();
-      const navigate = useNavigate();
-      
-      const handleLogout = () => {
-        mockLogout();
-        navigate('/login', { replace: true });
-      };
-      
-      return (
-        <div className="min-h-screen bg-gray-50" data-testid="dashboard">
-          <header className="bg-white shadow-sm border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center">
-                  <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
-                  </div>
-                  <h1 className="ml-3 text-xl font-semibold text-gray-900">Dashboard</h1>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-600" data-testid="welcome-message">
-                    Welcome back, <span className="font-medium">{user?.firstName}</span>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                    data-testid="logout-button"
-                  >
-                    <LogOut className="w-4 h-4 mr-1" />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </div>
-          </header>
-        </div>
-      );
-    };
-    
-    render(
-      <BrowserRouter>
-        <CustomDashboard />
-      </BrowserRouter>
-    );
-    
     const logoutButton = screen.getByTestId('logout-button');
     await user.click(logoutButton);
     
