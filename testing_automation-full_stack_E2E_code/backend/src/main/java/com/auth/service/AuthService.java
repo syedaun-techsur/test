@@ -6,6 +6,8 @@ import com.auth.dto.UserDto;
 import com.auth.entity.User;
 import com.auth.repository.UserRepository;
 import com.auth.util.JwtUtil;
+import com.auth.exception.InvalidCredentialsException;
+import com.auth.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,16 +27,11 @@ public class AuthService {
     private JwtUtil jwtUtil;
     
     public LoginResponse login(LoginRequest loginRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
-        
-        if (userOptional.isEmpty()) {
-            throw new RuntimeException("Invalid email or password");
-        }
-        
-        User user = userOptional.get();
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + loginRequest.getEmail()));
         
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
         
         String token = jwtUtil.generateToken(user.getEmail(), user.getId());
@@ -50,13 +47,9 @@ public class AuthService {
     }
     
     public UserDto getUserByEmail(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         
-        if (userOptional.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-        
-        User user = userOptional.get();
         return new UserDto(
             user.getId(),
             user.getEmail(),
