@@ -23,7 +23,7 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
@@ -31,16 +31,26 @@ public class User {
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // Do not set createdAt and updatedAt here to avoid lifecycle issues
     }
     
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
     
     // Getters and Setters
@@ -64,6 +74,7 @@ public class User {
         return password;
     }
     
+    // Important: Password should be hashed before setting
     public void setPassword(String password) {
         this.password = password;
     }
@@ -100,8 +111,15 @@ public class User {
         this.updatedAt = updatedAt;
     }
     
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }
