@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 // Test component that uses the auth context
 const TestComponent = () => {
@@ -17,7 +17,7 @@ const TestComponent = () => {
       <div data-testid="token">{token || 'No Token'}</div>
       <button 
         data-testid="login-btn" 
-        onClick={() => login('test@example.com', 'password123')}
+        onClick={async () => await login('test@example.com', 'password123')}
       >
         Login
       </button>
@@ -32,19 +32,23 @@ describe('AuthContext', () => {
     localStorage.clear();
   });
 
-  it('provides initial state correctly', () => {
+  it('provides initial state correctly', async () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
     
-    expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    // Wait for isLoading state to be false after initialization
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    });
+
     expect(screen.getByTestId('user')).toHaveTextContent('No User');
     expect(screen.getByTestId('token')).toHaveTextContent('No Token');
   });
 
-  it('loads user from localStorage on initialization', () => {
+  it('loads user from localStorage on initialization', async () => {
     const mockUser = { id: 1, email: 'test@example.com', firstName: 'John', lastName: 'Doe' };
     const mockToken = 'mock-token';
     
@@ -56,6 +60,11 @@ describe('AuthContext', () => {
         <TestComponent />
       </AuthProvider>
     );
+
+    // Wait for isLoading state to be false after initialization
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    });
     
     expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
     expect(screen.getByTestId('token')).toHaveTextContent('mock-token');
@@ -83,7 +92,9 @@ describe('AuthContext', () => {
     const loginButton = screen.getByTestId('login-btn');
     await user.click(loginButton);
     
+    // Wait for updates after async login
     await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
       expect(screen.getByTestId('user')).toHaveTextContent('Jane Smith');
       expect(screen.getByTestId('token')).toHaveTextContent('new-token');
     });
@@ -112,7 +123,9 @@ describe('AuthContext', () => {
     const loginButton = screen.getByTestId('login-btn');
     await user.click(loginButton);
     
+    // Wait for updates after login failure
     await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
       expect(screen.getByTestId('user')).toHaveTextContent('No User');
       expect(screen.getByTestId('token')).toHaveTextContent('No Token');
     });
@@ -132,6 +145,11 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
     
+    // Wait for isLoading to be false on init
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    });
+
     // Verify user is logged in
     expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
     
