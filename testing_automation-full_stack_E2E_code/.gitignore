@@ -1,19 +1,41 @@
+# Node.js dependencies
 /node_modules
+**/node_modules
+
+# Build directories
 /dist
 /build
 /target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
-.env
-**/node_modules
 **/dist
 **/build
 **/target
+/out
+/bin
+/obj
+
+# Logs and temporary files
+*.log
+*.tmp
+/logs
+/tmp
+/cache
+/temp
+
+# Environment and configuration files
+.env
+/config
+/backup
+**/config
+**/backup
+
+# Frontend, Supabase, and Database directories
 /frontend
 /supabase
 /database
+
+# IDE and editor configurations
+.idea/
+/.vscode/
+/.project
+/.settings
+/.idea
