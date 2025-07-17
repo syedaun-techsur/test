@@ -1,19 +1,26 @@
-/node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
-.env
-**/node_modules
-**/dist
-**/build
-**/target
-/frontend
-/supabase
-/database
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+target/
+
+# Logs and temporary files
+logs/
+tmp/
+temp/
+cache/
+
+# Data and config files
+data/
+config/
+backup/
+
+# Frontend and database directories
+frontend/
+supabase/
+database/
+
+# Environment variables
+.env*
