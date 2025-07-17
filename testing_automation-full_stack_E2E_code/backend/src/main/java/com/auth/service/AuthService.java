@@ -6,62 +6,76 @@ import com.auth.dto.UserDto;
 import com.auth.entity.User;
 import com.auth.repository.UserRepository;
 import com.auth.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class AuthService {
-    
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private JwtUtil jwtUtil;
-    
-    public LoginResponse login(LoginRequest loginRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
-        
-        if (userOptional.isEmpty()) {
-            throw new RuntimeException("Invalid email or password");
-        }
-        
-        User user = userOptional.get();
-        
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+
+    public AuthService(final UserRepository userRepository,
+                       final PasswordEncoder passwordEncoder,
+                       final JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
+
+    /**
+     * Attempts to log in a user with the provided credentials.
+     *
+     * @param loginRequest contains email and password
+     * @return LoginResponse containing JWT token, user details, and message
+     * @throws AuthenticationException if email or password is invalid
+     */
+    public LoginResponse login(final LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new AuthenticationException("Invalid email or password"));
+
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new AuthenticationException("Invalid email or password");
         }
-        
+
         String token = jwtUtil.generateToken(user.getEmail(), user.getId());
-        
-        UserDto userDto = new UserDto(
-            user.getId(),
-            user.getEmail(),
-            user.getFirstName(),
-            user.getLastName()
-        );
-        
+        UserDto userDto = toUserDto(user);
         return new LoginResponse(token, userDto, "Login successful");
     }
-    
-    public UserDto getUserByEmail(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        
-        if (userOptional.isEmpty()) {
-            throw new RuntimeException("User not found");
-        }
-        
-        User user = userOptional.get();
+
+    /**
+     * Retrieves user details by email.
+     *
+     * @param email the email of the user
+     * @return UserDto containing user information
+     * @throws UserNotFoundException if user is not found
+     */
+    public UserDto getUserByEmail(final String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return toUserDto(user);
+    }
+
+    private UserDto toUserDto(final User user) {
         return new UserDto(
-            user.getId(),
-            user.getEmail(),
-            user.getFirstName(),
-            user.getLastName()
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName()
         );
+    }
+
+    // Custom unchecked exceptions for better domain-specific error handling
+    public static class AuthenticationException extends RuntimeException {
+        public AuthenticationException(final String message) {
+            super(message);
+        }
+    }
+
+    public static class UserNotFoundException extends RuntimeException {
+        public UserNotFoundException(final String message) {
+            super(message);
+        }
     }
 }
