@@ -1,0 +1,7 @@
+{
+  "project_type": "springboot_only",
+  "npm_build_status": "NO NPM FILES",
+  "maven_build_status": "FAILED",
+  "overall_status": "Maven: FAILED",
+  "timestamp": "fullstack_processing_completed"
+}
