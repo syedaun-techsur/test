@@ -20,7 +20,6 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -48,31 +47,25 @@ const LoginForm: React.FC = () => {
     return newErrors;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    setErrors(prev => {
-      const newErrors = { ...prev };
-      if (name === 'email') {
-        if (validateEmail(value)) {
-          newErrors.email = undefined;
-        }
-        // else, do not clear error
+    setErrors(prevErrors => {
+      const updatedErrors = { ...prevErrors };
+      if (name === 'email' && (validateEmail(value) || value.trim() === '')) {
+        updatedErrors.email = undefined;
       }
-      if (name === 'password') {
-        if (value.length >= 6) {
-          newErrors.password = undefined;
-        }
-        // else, do not clear error
+      if (name === 'password' && (value.length >= 6 || value.trim() === '')) {
+        updatedErrors.password = undefined;
       }
-      return newErrors;
+      return updatedErrors;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -80,17 +73,16 @@ const LoginForm: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    setErrors({});
+    setErrors(prev => ({ ...prev, submit: undefined }));
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
-      // Redirect to dashboard on successful login
       navigate('/dashboard', { replace: true });
     } else {
-      setErrors({ submit: result.message });
+      setErrors(prev => ({ ...prev, submit: result.message }));
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -98,16 +90,23 @@ const LoginForm: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md transform transition-all duration-300 hover:shadow-2xl">
         <div className="text-center mb-8">
-          <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div
+            className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            aria-hidden="true"
+          >
             <LogIn className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-600">Login to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
+        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form" noValidate>
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" data-testid="error-message">
+            <div
+              role="alert"
+              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+              data-testid="error-message"
+            >
               {errors.submit}
             </div>
           )}
@@ -118,7 +117,7 @@ const LoginForm: React.FC = () => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <Mail className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
                 type="email"
@@ -130,11 +129,17 @@ const LoginForm: React.FC = () => {
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your email"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : undefined}
                 data-testid="email-input"
+                autoComplete="email"
+                required
               />
             </div>
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1" data-testid="email-error">{errors.email}</p>
+              <p className="text-red-600 text-sm mt-1" id="email-error" data-testid="email-error">
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -144,7 +149,7 @@ const LoginForm: React.FC = () => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+                <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -156,22 +161,31 @@ const LoginForm: React.FC = () => {
                   errors.password ? 'border-red-300' : 'border-gray-300'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your password"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
                 data-testid="password-input"
+                autoComplete="current-password"
+                required
               />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword(prev => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 data-testid="toggle-password"
               >
                 {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
                 ) : (
-                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1" id="password-error" data-testid="password-error">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <button
@@ -179,10 +193,14 @@ const LoginForm: React.FC = () => {
             disabled={isSubmitting || isLoading}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             data-testid="login-button"
+            aria-busy={isSubmitting}
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <div
+                  className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"
+                  aria-hidden="true"
+                ></div>
                 Logging in...
               </div>
             ) : (
@@ -192,7 +210,7 @@ const LoginForm: React.FC = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600" aria-live="polite">
             Demo credentials: admin@example.com / password123
           </p>
         </div>
