@@ -1,19 +1,28 @@
+# Node modules and build outputs
 /node_modules
 /dist
 /build
 /target
+
+# Logs and temp files
 /logs
 /tmp
+/temp
+/cache
+
+# Data and config/backup files
 /data
 /config
 /backup
-/cache
-/temp
+
+# Environment files
 .env
-**/node_modules
-**/dist
-**/build
-**/target
+
+# Frontend and database specific artifacts
 /frontend
 /supabase
 /database
+
+# OS files
+.DS_Store
+Thumbs.db
