@@ -1,18 +1,40 @@
+# Dependency directories
 /node_modules
+**/node_modules
+
+# Build output directories
 /dist
 /build
 /target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
-.env
-**/node_modules
 **/dist
 **/build
 **/target
-/supabase
+
+# Logs
+/logs
+**/logs
+
+# Temporary files
+/tmp
+**/tmp
+/cache
+**/cache
+/temp
+**/temp
+
+# Environment variables
+.env
+
+# Configuration and backup files
+/config
+**/config
+/backup
+**/backup
+
+# Database files
 /database
+**/database
+
+# Supabase directory
+/supabase
+**/supabase
