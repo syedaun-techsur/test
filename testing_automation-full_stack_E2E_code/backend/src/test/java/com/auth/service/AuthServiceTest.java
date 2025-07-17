@@ -51,66 +51,66 @@ class AuthServiceTest {
     }
 
     @Test
-    void testLoginSuccess() {
+    void login_Success() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(true);
         when(jwtUtil.generateToken("admin@example.com", 1L)).thenReturn("mock-token");
 
         LoginResponse response = authService.login(loginRequest);
 
-        assertNotNull(response);
-        assertEquals("mock-token", response.getToken());
-        assertEquals("Login successful", response.getMessage());
-        assertNotNull(response.getUser());
-        assertEquals("admin@example.com", response.getUser().getEmail());
-        assertEquals("John", response.getUser().getFirstName());
-        assertEquals("Doe", response.getUser().getLastName());
+        assertNotNull(response, "Response should not be null");
+        assertEquals("mock-token", response.getToken(), "Token mismatch");
+        assertEquals("Login successful", response.getMessage(), "Message mismatch");
+        assertNotNull(response.getUser(), "User should not be null");
+        assertEquals("admin@example.com", response.getUser().getEmail(), "User email mismatch");
+        assertEquals("John", response.getUser().getFirstName(), "User firstName mismatch");
+        assertEquals("Doe", response.getUser().getLastName(), "User lastName mismatch");
     }
 
     @Test
-    void testLoginWithInvalidEmail() {
+    void login_WithInvalidEmail_ThrowsException() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.login(loginRequest);
         });
 
-        assertEquals("Invalid email or password", exception.getMessage());
+        assertEquals("Invalid email or password", exception.getMessage(), "Exception message mismatch");
     }
 
     @Test
-    void testLoginWithInvalidPassword() {
+    void login_WithInvalidPassword_ThrowsException() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.login(loginRequest);
         });
 
-        assertEquals("Invalid email or password", exception.getMessage());
+        assertEquals("Invalid email or password", exception.getMessage(), "Exception message mismatch");
     }
 
     @Test
-    void testGetUserByEmailSuccess() {
+    void getUserByEmail_Success() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
 
         UserDto userDto = authService.getUserByEmail("admin@example.com");
 
-        assertNotNull(userDto);
-        assertEquals(1L, userDto.getId());
-        assertEquals("admin@example.com", userDto.getEmail());
-        assertEquals("John", userDto.getFirstName());
-        assertEquals("Doe", userDto.getLastName());
+        assertNotNull(userDto, "UserDto should not be null");
+        assertEquals(1L, userDto.getId(), "User ID mismatch");
+        assertEquals("admin@example.com", userDto.getEmail(), "Email mismatch");
+        assertEquals("John", userDto.getFirstName(), "FirstName mismatch");
+        assertEquals("Doe", userDto.getLastName(), "LastName mismatch");
     }
 
     @Test
-    void testGetUserByEmailNotFound() {
+    void getUserByEmail_NotFound_ThrowsException() {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.getUserByEmail("nonexistent@example.com");
         });
 
-        assertEquals("User not found", exception.getMessage());
+        assertEquals("User not found", exception.getMessage(), "Exception message mismatch");
     }
 }
