@@ -1,4 +1,4 @@
-import * as React from "react"
+import React from "react"
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu"
 import { cva } from "class-variance-authority"
 import { ChevronDown } from "lucide-react"
@@ -26,7 +26,7 @@ NavigationMenu.displayName = NavigationMenuPrimitive.Root.displayName
 const NavigationMenuList = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.List>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <NavigationMenuPrimitive.List
     ref={ref}
     className={cn(
@@ -34,7 +34,9 @@ const NavigationMenuList = React.forwardRef<
       className
     )}
     {...props}
-  />
+  >
+    {children}
+  </NavigationMenuPrimitive.List>
 ))
 NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
 
@@ -50,7 +52,7 @@ const NavigationMenuTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <NavigationMenuPrimitive.Trigger
     ref={ref}
-    className={cn(navigationMenuTriggerStyle(), "group", className)}
+    className={cn(navigationMenuTriggerStyle(), className)}
     {...props}
   >
     {children}{" "}
@@ -65,15 +67,17 @@ NavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName
 const NavigationMenuContent = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Content>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <NavigationMenuPrimitive.Content
     ref={ref}
     className={cn(
-      "left-0 top-0 w-full data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 md:absolute md:w-auto ",
+      "left-0 top-0 w-full data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 md:absolute md:w-auto",
       className
     )}
     {...props}
-  />
+  >
+    {children}
+  </NavigationMenuPrimitive.Content>
 ))
 NavigationMenuContent.displayName = NavigationMenuPrimitive.Content.displayName
 
@@ -94,8 +98,7 @@ const NavigationMenuViewport = React.forwardRef<
     />
   </div>
 ))
-NavigationMenuViewport.displayName =
-  NavigationMenuPrimitive.Viewport.displayName
+NavigationMenuViewport.displayName = NavigationMenuPrimitive.Viewport.displayName
 
 const NavigationMenuIndicator = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Indicator>,
@@ -112,8 +115,7 @@ const NavigationMenuIndicator = React.forwardRef<
     <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-md" />
   </NavigationMenuPrimitive.Indicator>
 ))
-NavigationMenuIndicator.displayName =
-  NavigationMenuPrimitive.Indicator.displayName
+NavigationMenuIndicator.displayName = NavigationMenuPrimitive.Indicator.displayName
 
 export {
   navigationMenuTriggerStyle,
@@ -126,4 +128,3 @@ export {
   NavigationMenuIndicator,
   NavigationMenuViewport,
 }
-
