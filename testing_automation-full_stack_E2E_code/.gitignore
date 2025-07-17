@@ -1,12 +1,31 @@
-/node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
-.env
+# Node modules and build directories
+/node_modules/
+/dist/
+/build/
+/target/
+
+# Logs and temp files
+/logs/
+/tmp/
+/temp/
+/*.log
+
+# Data and cache
+/data/
+/cache/
+
+# Configuration and environment files
+/config/
+/.env
+
+# Backup files
+/backup/
+
+# IDE and editor folders
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Coverage reports
+/coverage/
