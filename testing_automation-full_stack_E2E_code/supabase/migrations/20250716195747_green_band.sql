@@ -1,8 +1,8 @@
 -- Create database
 CREATE DATABASE auth_db;
 
--- Connect to the database
-\c auth_db;
+-- Connect to the database (standard SQL syntax for clarity in scripts)
+CONNECT TO auth_db;
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
 );
 
 -- Create an index on email for faster lookups
@@ -27,16 +27,16 @@ VALUES (
     'Doe'
 ) ON CONFLICT (email) DO NOTHING;
 
--- Function to automatically update updated_at timestamp
+-- Function to automatically update updated_at timestamp before row update
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC';
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Trigger to automatically update updated_at
+-- Trigger to automatically update updated_at before user table update
 CREATE TRIGGER update_users_updated_at 
     BEFORE UPDATE ON users 
     FOR EACH ROW 
