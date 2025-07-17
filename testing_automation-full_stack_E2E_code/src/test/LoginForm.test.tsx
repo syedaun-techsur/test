@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { AuthProvider } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch globally with correct typing to avoid TS errors
+const globalAny: any = global;
+globalAny.fetch = vi.fn();
 
 const MockedLoginForm = () => (
   <BrowserRouter>
@@ -50,16 +51,14 @@ describe('LoginForm', () => {
     
     const emailInput = screen.getByTestId('email-input');
     const passwordInput = screen.getByTestId('password-input');
-    const loginForm = screen.getByTestId('login-form');
+    const loginButton = screen.getByTestId('login-button');
     
     await user.clear(emailInput);
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
     
-    // Submit the form directly instead of clicking the button
-    fireEvent.submit(loginForm);
-    
-    // Use findByTestId to wait for the error to appear
+    await user.click(loginButton);
+
     const emailError = await screen.findByTestId('email-error');
     expect(emailError).toHaveTextContent('Please enter a valid email address');
   });
@@ -98,10 +97,9 @@ describe('LoginForm', () => {
     const mockResponse = {
       token: 'mock-token',
       user: { id: 1, email: 'admin@example.com', firstName: 'John', lastName: 'Doe' },
-      message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalAny.fetch as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -116,7 +114,7 @@ describe('LoginForm', () => {
     await user.type(passwordInput, 'password123');
     await user.click(loginButton);
     
-    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/api/login', {
+    expect(globalAny.fetch).toHaveBeenCalledWith('http://localhost:8080/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -131,7 +129,7 @@ describe('LoginForm', () => {
       message: 'Invalid email or password'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalAny.fetch as vi.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
