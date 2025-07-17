@@ -1,6 +1,8 @@
 package com.auth.util;
 
+import com.auth.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -18,6 +20,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Generate token successfully")
     void testGenerateToken() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -29,6 +32,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Extract email from token")
     void testGetEmailFromToken() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -40,6 +44,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Extract user ID from token")
     void testGetUserIdFromToken() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -51,6 +56,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Validate a valid token")
     void testValidateTokenValid() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -62,6 +68,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Invalidate a malformed token")
     void testValidateTokenInvalid() {
         String invalidToken = "invalid.token.here";
 
@@ -71,6 +78,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Verify token is not expired")
     void testIsTokenExpiredFalse() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -82,6 +90,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Verify malformed token is treated as expired")
     void testIsTokenExpiredTrue() {
         String invalidToken = "invalid.token.here";
 
