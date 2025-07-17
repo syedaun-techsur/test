@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -5,7 +6,7 @@ import App from '../App';
 
 // Mock the auth context
 vi.mock('../context/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAuth: () => ({
     user: null,
     token: null,
@@ -15,12 +16,14 @@ vi.mock('../context/AuthContext', () => ({
   })
 }));
 
-// Mock the components
-vi.mock('../pages/LoginPage', () => ({
+// Mock the components used by App
+vi.mock('../components/LoginForm', () => ({
+  __esModule: true,
   default: () => <div data-testid="login-page">Login Page</div>
 }));
 
-vi.mock('../pages/DashboardPage', () => ({
+vi.mock('../components/Dashboard', () => ({
+  __esModule: true,
   default: () => <div data-testid="dashboard-page">Dashboard Page</div>
 }));
 
@@ -29,24 +32,30 @@ describe('App Routing', () => {
     vi.clearAllMocks();
   });
 
-  it('redirects to login page by default', () => {
+  it('redirects to login page by default ("/")', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('shows login page on /login route', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/login']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('redirects unknown routes to login', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/unknown-route']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 });
