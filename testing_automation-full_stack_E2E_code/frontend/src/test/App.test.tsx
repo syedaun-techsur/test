@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 
 // Mock the auth context
 vi.mock('../context/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAuth: () => ({
     user: null,
     token: null,
@@ -15,38 +15,51 @@ vi.mock('../context/AuthContext', () => ({
   })
 }));
 
-// Mock the components
-vi.mock('../pages/LoginPage', () => ({
+// Mock the components used inside App routes
+vi.mock('../components/LoginForm', () => ({
+  __esModule: true,
   default: () => <div data-testid="login-page">Login Page</div>
 }));
 
-vi.mock('../pages/DashboardPage', () => ({
+vi.mock('../components/Dashboard', () => ({
+  __esModule: true,
   default: () => <div data-testid="dashboard-page">Dashboard Page</div>
 }));
 
 describe('App Routing', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('redirects to login page by default', () => {
+  it('redirects to login page by default "/" route', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('shows login page on /login route', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/login']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
-  it('redirects unknown routes to login', () => {
+  it('redirects unknown routes to login page', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/unknown']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
+  });
+
+  it('renders dashboard page on /dashboard route', () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
   });
 });
