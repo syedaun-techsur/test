@@ -1,4 +1,11 @@
 {
+  "compilerOptions": {
+    "composite": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "tsBuildInfoFile": "./.tsbuildinfo"
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
