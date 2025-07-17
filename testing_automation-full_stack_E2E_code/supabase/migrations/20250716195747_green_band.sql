@@ -1,10 +1,19 @@
--- Create database
-CREATE DATABASE auth_db;
+-- Create database if it doesn't exist
+DO
+$do$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_database WHERE datname = 'auth_db'
+   ) THEN
+      PERFORM dblink_exec('dbname=postgres', 'CREATE DATABASE auth_db');
+   END IF;
+END
+$do$;
 
--- Connect to the database
-\c auth_db;
+-- Connect to the database (psql specific command)
+\connect auth_db
 
--- Create users table
+-- Create users table if it doesn't exist
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -15,7 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create an index on email for faster lookups
+-- Create an index on email for faster lookups if not exists
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Insert demo user (password is bcrypt hash of "password123")
@@ -27,16 +36,16 @@ VALUES (
     'Doe'
 ) ON CONFLICT (email) DO NOTHING;
 
--- Function to automatically update updated_at timestamp
+-- Function to automatically update updated_at timestamp before row update
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Trigger to automatically update updated_at
+-- Trigger to automatically update updated_at before updating a user record
 CREATE TRIGGER update_users_updated_at 
     BEFORE UPDATE ON users 
     FOR EACH ROW 
