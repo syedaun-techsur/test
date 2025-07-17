@@ -13,9 +13,9 @@ const Dashboard: React.FC = () => {
   };
 
   const stats = [
-    { label: 'Total Projects', value: '12', icon: Activity, color: 'bg-blue-500' },
-    { label: 'Active Tasks', value: '8', icon: Calendar, color: 'bg-green-500' },
-    { label: 'Notifications', value: '3', icon: Bell, color: 'bg-yellow-500' },
+    { id: 'total-projects', label: 'Total Projects', value: '12', icon: Activity, color: 'bg-blue-500' },
+    { id: 'active-tasks', label: 'Active Tasks', value: '8', icon: Calendar, color: 'bg-green-500' },
+    { id: 'notifications', label: 'Notifications', value: '3', icon: Bell, color: 'bg-yellow-500' },
   ];
 
   return (
@@ -26,21 +26,23 @@ const Dashboard: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+                <User className="w-5 h-5 text-white" aria-hidden="true" />
               </div>
               <h1 className="ml-3 text-xl font-semibold text-gray-900">Dashboard</h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600" data-testid="welcome-message">
-                Welcome back, <span className="font-medium">{user?.firstName}</span>
+                Welcome back, <span className="font-medium">{user?.firstName || 'User'}</span>
               </div>
               <button
                 onClick={handleLogout}
                 className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 data-testid="logout-button"
+                aria-label="Logout"
+                type="button"
               >
-                <LogOut className="w-4 h-4 mr-1" />
+                <LogOut className="w-4 h-4 mr-1" aria-hidden="true" />
                 Logout
               </button>
             </div>
@@ -53,22 +55,26 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Good morning, {user?.firstName}!
+            Good morning, {user?.firstName || 'User'}!
           </h2>
           <p className="text-gray-600">Here's what's happening with your account today.</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow" data-testid={`stat-card-${index}`}>
+          {stats.map(({ id, label, value, icon: Icon, color }) => (
+            <div
+              key={id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              data-testid={`stat-card-${id}`}
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-600">{label}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+                <div className={`${color} p-3 rounded-lg`}>
+                  <Icon className="w-6 h-6 text-white" aria-hidden="true" />
                 </div>
               </div>
             </div>
@@ -76,23 +82,50 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* User Info Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8" data-testid="user-info-card">
+        <div
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
+          data-testid="user-info-card"
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <User className="w-5 h-5 mr-2" />
+            <User className="w-5 h-5 mr-2" aria-hidden="true" />
             Profile Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="first-name">{user?.firstName}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="firstName">
+                First Name
+              </label>
+              <p
+                className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg"
+                data-testid="first-name"
+                id="firstName"
+              >
+                {user?.firstName || '-'}
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="last-name">{user?.lastName}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="lastName">
+                Last Name
+              </label>
+              <p
+                className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg"
+                data-testid="last-name"
+                id="lastName"
+              >
+                {user?.lastName || '-'}
+              </p>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="email">{user?.email}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
+                Email Address
+              </label>
+              <p
+                className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg"
+                data-testid="email"
+                id="email"
+              >
+                {user?.email || '-'}
+              </p>
             </div>
           </div>
         </div>
@@ -100,19 +133,34 @@ const Dashboard: React.FC = () => {
         {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Settings className="w-5 h-5 mr-2" />
+            <Settings className="w-5 h-5 mr-2" aria-hidden="true" />
             Quick Actions
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="update-profile-btn">
+            <button
+              type="button"
+              className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              data-testid="update-profile-btn"
+              aria-label="Update Profile"
+            >
               <h4 className="font-medium text-gray-900">Update Profile</h4>
               <p className="text-sm text-gray-600 mt-1">Change your personal information</p>
             </button>
-            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="security-settings-btn">
+            <button
+              type="button"
+              className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              data-testid="security-settings-btn"
+              aria-label="Security Settings"
+            >
               <h4 className="font-medium text-gray-900">Security Settings</h4>
               <p className="text-sm text-gray-600 mt-1">Manage your password and security</p>
             </button>
-            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="notifications-btn">
+            <button
+              type="button"
+              className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+              data-testid="notifications-btn"
+              aria-label="Notifications"
+            >
               <h4 className="font-medium text-gray-900">Notifications</h4>
               <p className="text-sm text-gray-600 mt-1">Configure your notification preferences</p>
             </button>
