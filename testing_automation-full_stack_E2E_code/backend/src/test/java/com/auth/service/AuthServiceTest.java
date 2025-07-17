@@ -7,6 +7,7 @@ import com.auth.entity.User;
 import com.auth.repository.UserRepository;
 import com.auth.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,7 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +40,7 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Setup test user and login request
         testUser = new User();
         testUser.setId(1L);
         testUser.setEmail("admin@example.com");
@@ -51,7 +52,8 @@ class AuthServiceTest {
     }
 
     @Test
-    void testLoginSuccess() {
+    @DisplayName("Login succeeds with valid credentials")
+    void loginSuccess() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(true);
         when(jwtUtil.generateToken("admin@example.com", 1L)).thenReturn("mock-token");
@@ -68,10 +70,11 @@ class AuthServiceTest {
     }
 
     @Test
-    void testLoginWithInvalidEmail() {
+    @DisplayName("Login fails with invalid email")
+    void loginFailsWithInvalidEmail() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.login(loginRequest);
         });
 
@@ -79,11 +82,12 @@ class AuthServiceTest {
     }
 
     @Test
-    void testLoginWithInvalidPassword() {
+    @DisplayName("Login fails with invalid password")
+    void loginFailsWithInvalidPassword() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.login(loginRequest);
         });
 
@@ -91,7 +95,8 @@ class AuthServiceTest {
     }
 
     @Test
-    void testGetUserByEmailSuccess() {
+    @DisplayName("Get user by email succeeds when user exists")
+    void getUserByEmailSuccess() {
         when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
 
         UserDto userDto = authService.getUserByEmail("admin@example.com");
@@ -104,10 +109,11 @@ class AuthServiceTest {
     }
 
     @Test
-    void testGetUserByEmailNotFound() {
+    @DisplayName("Get user by email fails when user not found")
+    void getUserByEmailNotFound() {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.getUserByEmail("nonexistent@example.com");
         });
 
