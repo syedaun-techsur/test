@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,8 +32,8 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      let result;
-      
+      let result: { error: any };
+
       if (isLogin) {
         result = await signIn(formData.email, formData.password);
       } else {
@@ -44,6 +43,7 @@ const Auth = () => {
             description: "Name is required for signup",
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
         result = await signUp(formData.email, formData.password, formData.name);
@@ -65,7 +65,7 @@ const Auth = () => {
           navigate('/');
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
         description: "Something went wrong. Please try again.",
@@ -96,7 +96,7 @@ const Auth = () => {
         </CardHeader>
         
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-white font-medium">Name</Label>
@@ -109,6 +109,7 @@ const Auth = () => {
                   placeholder="Enter your name"
                   disabled={isLoading}
                   required={!isLogin}
+                  autoComplete="name"
                 />
               </div>
             )}
@@ -126,6 +127,7 @@ const Auth = () => {
                   placeholder="Enter your email"
                   disabled={isLoading}
                   required
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -143,12 +145,14 @@ const Auth = () => {
                   placeholder="Enter your password"
                   disabled={isLoading}
                   required
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   disabled={isLoading}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -176,6 +180,7 @@ const Auth = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-purple-400 hover:text-purple-300 font-medium"
               disabled={isLoading}
+              type="button"
             >
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
             </button>
@@ -187,4 +192,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
