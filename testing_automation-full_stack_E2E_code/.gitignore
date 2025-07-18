@@ -1,18 +1,29 @@
+# Node modules and build artifacts
 /node_modules
 /dist
 /build
 /target
+
+# Logs and temporary files
 /logs
+*.log
 /tmp
+/temp
+/cache
+
+# Data and database
 /data
+/database
+
+# Configuration and backups
 /config
 /backup
-/cache
-/temp
 .env
-**/node_modules
-**/dist
-**/build
-**/target
 /supabase
-/database
+
+# Editor and OS files
+.vscode/
+.DS_Store
+.idea/
+*.swp
+*.swo
