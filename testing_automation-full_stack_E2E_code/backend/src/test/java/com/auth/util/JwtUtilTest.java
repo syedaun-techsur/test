@@ -1,5 +1,6 @@
 package com.auth.util;
 
+import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,75 +19,67 @@ class JwtUtilTest {
     }
 
     @Test
-    void testGenerateToken() {
-        String email = "test@example.com";
-        Long userId = 1L;
+    void generateToken_ShouldReturnToken() {
+        final String email = "test@example.com";
+        final Long userId = 1L;
 
-        String token = jwtUtil.generateToken(email, userId);
+        final String token = jwtUtil.generateToken(email, userId);
 
         assertNotNull(token);
         assertFalse(token.isEmpty());
     }
 
     @Test
-    void testGetEmailFromToken() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
+    void getEmailFromToken_ShouldReturnCorrectEmail() {
+        final String email = "test@example.com";
+        final Long userId = 1L;
+        final String token = jwtUtil.generateToken(email, userId);
 
-        String extractedEmail = jwtUtil.getEmailFromToken(token);
+        final String extractedEmail = jwtUtil.getEmailFromToken(token);
 
         assertEquals(email, extractedEmail);
     }
 
     @Test
-    void testGetUserIdFromToken() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
+    void getUserIdFromToken_ShouldReturnCorrectUserId() {
+        final String email = "test@example.com";
+        final Long userId = 1L;
+        final String token = jwtUtil.generateToken(email, userId);
 
-        Long extractedUserId = jwtUtil.getUserIdFromToken(token);
+        final Long extractedUserId = jwtUtil.getUserIdFromToken(token);
 
         assertEquals(userId, extractedUserId);
     }
 
     @Test
-    void testValidateTokenValid() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
+    void validateToken_ValidToken_ShouldReturnTrue() {
+        final String email = "test@example.com";
+        final Long userId = 1L;
+        final String token = jwtUtil.generateToken(email, userId);
 
-        boolean isValid = jwtUtil.validateToken(token);
-
-        assertTrue(isValid);
+        assertTrue(jwtUtil.validateToken(token));
     }
 
     @Test
-    void testValidateTokenInvalid() {
-        String invalidToken = "invalid.token.here";
+    void validateToken_InvalidToken_ShouldReturnFalse() {
+        final String invalidToken = "invalid.token.here";
 
-        boolean isValid = jwtUtil.validateToken(invalidToken);
-
-        assertFalse(isValid);
+        assertFalse(jwtUtil.validateToken(invalidToken));
     }
 
     @Test
-    void testIsTokenExpiredFalse() {
-        String email = "test@example.com";
-        Long userId = 1L;
-        String token = jwtUtil.generateToken(email, userId);
+    void isTokenExpired_ValidToken_ShouldReturnFalse() {
+        final String email = "test@example.com";
+        final Long userId = 1L;
+        final String token = jwtUtil.generateToken(email, userId);
 
-        boolean isExpired = jwtUtil.isTokenExpired(token);
-
-        assertFalse(isExpired);
+        assertFalse(jwtUtil.isTokenExpired(token));
     }
 
     @Test
-    void testIsTokenExpiredTrue() {
-        String invalidToken = "invalid.token.here";
+    void isTokenExpired_InvalidToken_ShouldReturnTrue() {
+        final String invalidToken = "invalid.token.here";
 
-        boolean isExpired = jwtUtil.isTokenExpired(invalidToken);
-
-        assertTrue(isExpired);
+        assertTrue(jwtUtil.isTokenExpired(invalidToken));
     }
 }
