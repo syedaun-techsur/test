@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { AuthProvider } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch with proper typing for better type safety
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 const MockedLoginForm = () => (
   <BrowserRouter>
@@ -25,7 +25,7 @@ describe('LoginForm', () => {
   it('renders login form with all required elements', () => {
     render(<MockedLoginForm />);
     
-    expect(screen.getByText('Welcome Back')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
     expect(screen.getByText('Login to your account')).toBeInTheDocument();
     expect(screen.getByTestId('email-input')).toBeInTheDocument();
     expect(screen.getByTestId('password-input')).toBeInTheDocument();
@@ -56,10 +56,9 @@ describe('LoginForm', () => {
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
     
-    // Submit the form directly instead of clicking the button
-    fireEvent.submit(loginForm);
-    
-    // Use findByTestId to wait for the error to appear
+    // Using userEvent to submit the form for more realistic user interaction
+    await user.submit(loginForm);
+
     const emailError = await screen.findByTestId('email-error');
     expect(emailError).toHaveTextContent('Please enter a valid email address');
   });
@@ -101,7 +100,8 @@ describe('LoginForm', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    // Mocking successful fetch response
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -131,7 +131,8 @@ describe('LoginForm', () => {
       message: 'Invalid email or password'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    // Mocking failed fetch response
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
