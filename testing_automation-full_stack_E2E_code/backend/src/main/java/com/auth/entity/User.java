@@ -23,20 +23,18 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // Default constructor for JPA
     }
     
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -48,7 +46,7 @@ public class User {
         return id;
     }
     
-    public void setId(Long id) {
+    protected void setId(Long id) {
         this.id = id;
     }
     
@@ -88,20 +86,31 @@ public class User {
         return createdAt;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    protected void setCreatedAt(LocalDateTime createdAt) {
+        if (createdAt != null) {
+            this.createdAt = createdAt;
+        }
     }
     
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
     
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    protected void setUpdatedAt(LocalDateTime updatedAt) {
+        if (updatedAt != null) {
+            this.updatedAt = updatedAt;
+        }
+    }
+    
+    @PrePersist
+    protected void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
     
     @PreUpdate
-    public void preUpdate() {
+    protected void preUpdateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
 }
