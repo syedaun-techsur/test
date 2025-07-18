@@ -50,8 +50,9 @@ class AuthControllerTest {
     void testLoginSuccess() throws Exception {
         when(authService.login(any(LoginRequest.class))).thenReturn(loginResponse);
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/login")
                 .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
                 .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("mock-token"))
@@ -66,8 +67,9 @@ class AuthControllerTest {
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new RuntimeException("Invalid email or password"));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/login")
                 .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
                 .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
@@ -78,23 +80,26 @@ class AuthControllerTest {
     void testLoginWithValidationErrors() throws Exception {
         LoginRequest invalidRequest = new LoginRequest("", "123");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/login")
                 .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
                 .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value("Validation failed"));
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.errors").isArray())
+                .andExpect(jsonPath("$.errors.length()").value(org.hamcrest.Matchers.greaterThan(0)));
     }
 
     @Test
     void testGetCurrentUserSuccess() throws Exception {
         String token = "Bearer mock-token";
-        
+
         when(jwtUtil.validateToken("mock-token")).thenReturn(true);
         when(jwtUtil.getEmailFromToken("mock-token")).thenReturn("admin@example.com");
         when(authService.getUserByEmail("admin@example.com")).thenReturn(userDto);
 
-        mockMvc.perform(get("/api/auth/me")
+        mockMvc.perform(get("/api/me")
                 .header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("admin@example.com"))
@@ -105,10 +110,10 @@ class AuthControllerTest {
     @Test
     void testGetCurrentUserWithInvalidToken() throws Exception {
         String token = "Bearer invalid-token";
-        
+
         when(jwtUtil.validateToken("invalid-token")).thenReturn(false);
 
-        mockMvc.perform(get("/api/auth/me")
+        mockMvc.perform(get("/api/me")
                 .header("Authorization", token))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
@@ -117,7 +122,7 @@ class AuthControllerTest {
 
     @Test
     void testLogout() throws Exception {
-        mockMvc.perform(post("/api/auth/logout"))
+        mockMvc.perform(post("/api/logout"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("{\"message\": \"Logout successful\"}"));
     }
