@@ -1,5 +1,7 @@
 package com.auth.dto;
 
+import java.util.Objects;
+
 public class UserDto {
     private Long id;
     private String email;
@@ -8,8 +10,8 @@ public class UserDto {
     
     // Constructors
     public UserDto() {}
-    
-    public UserDto(Long id, String email, String firstName, String lastName) {
+
+    public UserDto(final Long id, final String email, final String firstName, final String lastName) {
         this.id = id;
         this.email = email;
         this.firstName = firstName;
@@ -47,5 +49,31 @@ public class UserDto {
     
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    @Override
+    public String toString() {
+        return "UserDto{" +
+            "id=" + id +
+            ", email='" + email + '\'' +
+            ", firstName='" + firstName + '\'' +
+            ", lastName='" + lastName + '\'' +
+            '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserDto)) return false;
+        UserDto userDto = (UserDto) o;
+        return Objects.equals(id, userDto.id) &&
+               Objects.equals(email, userDto.email) &&
+               Objects.equals(firstName, userDto.firstName) &&
+               Objects.equals(lastName, userDto.lastName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, email, firstName, lastName);
     }
 }
