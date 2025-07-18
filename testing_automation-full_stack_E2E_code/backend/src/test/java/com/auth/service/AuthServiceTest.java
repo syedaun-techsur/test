@@ -17,11 +17,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
+
+    private static final String EMAIL = "admin@example.com";
+    private static final String INVALID_EMAIL = "nonexistent@example.com";
+    private static final String PASSWORD = "password123";
+    private static final String HASHED_PASSWORD = "hashedPassword";
+    private static final String INVALID_CREDENTIALS_MSG = "Invalid email or password";
+    private static final String USER_NOT_FOUND_MSG = "User not found";
+    private static final String TOKEN = "mock-token";
 
     @Mock
     private UserRepository userRepository;
@@ -42,75 +49,78 @@ class AuthServiceTest {
     void setUp() {
         testUser = new User();
         testUser.setId(1L);
-        testUser.setEmail("admin@example.com");
-        testUser.setPassword("hashedPassword");
+        testUser.setEmail(EMAIL);
+        testUser.setPassword(HASHED_PASSWORD);
         testUser.setFirstName("John");
         testUser.setLastName("Doe");
 
-        loginRequest = new LoginRequest("admin@example.com", "password123");
+        loginRequest = new LoginRequest(EMAIL, PASSWORD);
     }
 
     @Test
-    void testLoginSuccess() {
-        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(true);
-        when(jwtUtil.generateToken("admin@example.com", 1L)).thenReturn("mock-token");
+    void login_ShouldReturnLoginResponse_WhenCredentialsAreValid() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(PASSWORD, HASHED_PASSWORD)).thenReturn(true);
+        when(jwtUtil.generateToken(EMAIL, 1L)).thenReturn(TOKEN);
 
         LoginResponse response = authService.login(loginRequest);
 
-        assertNotNull(response);
-        assertEquals("mock-token", response.getToken());
-        assertEquals("Login successful", response.getMessage());
-        assertNotNull(response.getUser());
-        assertEquals("admin@example.com", response.getUser().getEmail());
-        assertEquals("John", response.getUser().getFirstName());
-        assertEquals("Doe", response.getUser().getLastName());
+        assertNotNull(response, "LoginResponse should not be null");
+        assertEquals(TOKEN, response.getToken(), "Token should match expected");
+        assertEquals("Login successful", response.getMessage(), "Message should indicate success");
+
+        UserDto user = response.getUser();
+        assertNotNull(user, "UserDto in response should not be null");
+        assertEquals(EMAIL, user.getEmail(), "User email should match");
+        assertEquals("John", user.getFirstName(), "User first name should match");
+        assertEquals("Doe", user.getLastName(), "User last name should match");
+        assertEquals(1L, user.getId(), "User id should match");
     }
 
     @Test
-    void testLoginWithInvalidEmail() {
-        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.empty());
+    void login_ShouldThrowException_WhenEmailNotFound() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.login(loginRequest);
-        });
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.login(loginRequest),
+                "Expected RuntimeException when email not found");
 
-        assertEquals("Invalid email or password", exception.getMessage());
+        assertEquals(INVALID_CREDENTIALS_MSG, exception.getMessage());
     }
 
     @Test
-    void testLoginWithInvalidPassword() {
-        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(false);
+    void login_ShouldThrowException_WhenPasswordDoesNotMatch() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(PASSWORD, HASHED_PASSWORD)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.login(loginRequest);
-        });
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.login(loginRequest),
+                "Expected RuntimeException when password does not match");
 
-        assertEquals("Invalid email or password", exception.getMessage());
+        assertEquals(INVALID_CREDENTIALS_MSG, exception.getMessage());
     }
 
     @Test
-    void testGetUserByEmailSuccess() {
-        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(testUser));
+    void getUserByEmail_ShouldReturnUserDto_WhenUserExists() {
+        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(testUser));
 
-        UserDto userDto = authService.getUserByEmail("admin@example.com");
+        UserDto userDto = authService.getUserByEmail(EMAIL);
 
-        assertNotNull(userDto);
-        assertEquals(1L, userDto.getId());
-        assertEquals("admin@example.com", userDto.getEmail());
-        assertEquals("John", userDto.getFirstName());
-        assertEquals("Doe", userDto.getLastName());
+        assertNotNull(userDto, "UserDto should not be null");
+        assertEquals(1L, userDto.getId(), "User id should match");
+        assertEquals(EMAIL, userDto.getEmail(), "User email should match");
+        assertEquals("John", userDto.getFirstName(), "User first name should match");
+        assertEquals("Doe", userDto.getLastName(), "User last name should match");
     }
 
     @Test
-    void testGetUserByEmailNotFound() {
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+    void getUserByEmail_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findByEmail(INVALID_EMAIL)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            authService.getUserByEmail("nonexistent@example.com");
-        });
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> authService.getUserByEmail(INVALID_EMAIL),
+                "Expected RuntimeException when user not found");
 
-        assertEquals("User not found", exception.getMessage());
+        assertEquals(USER_NOT_FOUND_MSG, exception.getMessage());
     }
 }
