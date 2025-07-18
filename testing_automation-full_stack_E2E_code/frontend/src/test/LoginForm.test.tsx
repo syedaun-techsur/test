@@ -6,7 +6,7 @@ import LoginForm from '../components/LoginForm';
 import { AuthProvider } from '../context/AuthContext';
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn() as typeof fetch;
 
 const MockedLoginForm = () => (
   <BrowserRouter>
@@ -24,7 +24,7 @@ describe('LoginForm', () => {
 
   it('renders login form with all required elements', () => {
     render(<MockedLoginForm />);
-    
+
     expect(screen.getByText('Welcome Back')).toBeInTheDocument();
     expect(screen.getByText('Login to your account')).toBeInTheDocument();
     expect(screen.getByTestId('email-input')).toBeInTheDocument();
@@ -33,89 +33,86 @@ describe('LoginForm', () => {
     expect(screen.getByText('Demo credentials: admin@example.com / password123')).toBeInTheDocument();
   });
 
-  it('shows validation errors for empty fields', async () => {
+  it('displays validation errors when fields are empty', async () => {
     const user = userEvent.setup();
     render(<MockedLoginForm />);
-    
+
     const loginButton = screen.getByTestId('login-button');
     await user.click(loginButton);
-    
-    expect(screen.getByTestId('email-error')).toHaveTextContent('Email is required');
+
+    expect(await screen.findByTestId('email-error')).toHaveTextContent('Email is required');
     expect(screen.getByTestId('password-error')).toHaveTextContent('Password is required');
   });
 
-  it('shows validation error for invalid email format', async () => {
+  it('displays validation error for invalid email format', async () => {
     const user = userEvent.setup();
     render(<MockedLoginForm />);
-    
+
     const emailInput = screen.getByTestId('email-input');
     const passwordInput = screen.getByTestId('password-input');
     const loginForm = screen.getByTestId('login-form');
-    
-    await user.clear(emailInput);
+
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
-    
-    // Submit the form directly instead of clicking the button
+
     fireEvent.submit(loginForm);
-    
-    // Use findByTestId to wait for the error to appear
+
     const emailError = await screen.findByTestId('email-error');
     expect(emailError).toHaveTextContent('Please enter a valid email address');
   });
 
-  it('shows validation error for short password', async () => {
+  it('displays validation error for short password', async () => {
     const user = userEvent.setup();
     render(<MockedLoginForm />);
-    
+
     const passwordInput = screen.getByTestId('password-input');
     const loginButton = screen.getByTestId('login-button');
-    
+
     await user.type(passwordInput, '123');
     await user.click(loginButton);
-    
-    expect(screen.getByTestId('password-error')).toHaveTextContent('Password must be at least 6 characters');
+
+    expect(await screen.findByTestId('password-error')).toHaveTextContent('Password must be at least 6 characters');
   });
 
-  it('toggles password visibility', async () => {
+  it('toggles password visibility when toggle button is clicked', async () => {
     const user = userEvent.setup();
     render(<MockedLoginForm />);
-    
+
     const passwordInput = screen.getByTestId('password-input') as HTMLInputElement;
     const toggleButton = screen.getByTestId('toggle-password');
-    
+
     expect(passwordInput.type).toBe('password');
-    
+
     await user.click(toggleButton);
     expect(passwordInput.type).toBe('text');
-    
+
     await user.click(toggleButton);
     expect(passwordInput.type).toBe('password');
   });
 
-  it('submits form with valid credentials', async () => {
+  it('submits form with valid credentials successfully', async () => {
     const user = userEvent.setup();
     const mockResponse = {
       token: 'mock-token',
       user: { id: 1, email: 'admin@example.com', firstName: 'John', lastName: 'Doe' },
       message: 'Login successful'
     };
-    
-    (global.fetch as any).mockResolvedValueOnce({
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
-    
+
     render(<MockedLoginForm />);
-    
+
     const emailInput = screen.getByTestId('email-input');
     const passwordInput = screen.getByTestId('password-input');
     const loginButton = screen.getByTestId('login-button');
-    
+
     await user.type(emailInput, 'admin@example.com');
     await user.type(passwordInput, 'password123');
     await user.click(loginButton);
-    
+
     expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/api/login', {
       method: 'POST',
       headers: {
@@ -125,27 +122,27 @@ describe('LoginForm', () => {
     });
   });
 
-  it('shows error message on login failure', async () => {
+  it('displays error message on login failure', async () => {
     const user = userEvent.setup();
     const mockErrorResponse = {
       message: 'Invalid email or password'
     };
-    
-    (global.fetch as any).mockResolvedValueOnce({
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
-    
+
     render(<MockedLoginForm />);
-    
+
     const emailInput = screen.getByTestId('email-input');
     const passwordInput = screen.getByTestId('password-input');
     const loginButton = screen.getByTestId('login-button');
-    
+
     await user.type(emailInput, 'admin@example.com');
     await user.type(passwordInput, 'wrongpassword');
     await user.click(loginButton);
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('error-message')).toHaveTextContent('Invalid email or password');
     });
