@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class AuthService {
     
@@ -25,7 +23,7 @@ public class AuthService {
     private JwtUtil jwtUtil;
     
     public LoginResponse login(LoginRequest loginRequest) {
-        Optional<User> userOptional = userRepository.findByEmail(loginRequest.getEmail());
+        var userOptional = userRepository.findByEmail(loginRequest.getEmail());
         
         if (userOptional.isEmpty()) {
             throw new RuntimeException("Invalid email or password");
@@ -50,7 +48,7 @@ public class AuthService {
     }
     
     public UserDto getUserByEmail(String email) {
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        var userOptional = userRepository.findByEmail(email);
         
         if (userOptional.isEmpty()) {
             throw new RuntimeException("User not found");
