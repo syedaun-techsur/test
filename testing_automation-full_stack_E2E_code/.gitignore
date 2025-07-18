@@ -1,19 +1,31 @@
+# Dependency directories
 /node_modules
+
+# Build output directories
 /dist
 /build
 /target
+/frontend
+
+# Environment files
+.env
+
+# Logs and temp files
 /logs
 /tmp
-/data
-/config
-/backup
-/cache
 /temp
-.env
-**/node_modules
-**/dist
-**/build
-**/target
-/frontend
-/supabase
+/cache
+
+# Data and backups
+/data
+/backup
 /database
+
+# Supabase generated files
+/supabase
+
+# OS or editor-specific files (improve robustness)
+/.vscode/
+/.idea/
+/.DS_Store
+Thumbs.db
