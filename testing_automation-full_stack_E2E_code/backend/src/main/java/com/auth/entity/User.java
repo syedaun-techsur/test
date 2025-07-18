@@ -1,6 +1,7 @@
 package com.auth.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.PreUpdate;
 import java.time.LocalDateTime;
 
 @Entity
