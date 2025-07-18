@@ -51,7 +51,8 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
         
-        return claims.get("userId", Long.class);
+        Number userIdNumber = claims.get("userId", Number.class);
+        return userIdNumber != null ? userIdNumber.longValue() : null;
     }
     
     public boolean validateToken(String token) {
