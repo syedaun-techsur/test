@@ -1,18 +1,34 @@
-/node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
+# Node modules
+/node_modules/
+
+# Build output directories
+/dist/
+/build/
+/target/
+
+# Logs and temp files
+/logs/
+/tmp/
+/temp/
+/cache/
+/backup/
+/data/
+/config/
+
+# Environment and local config files
 .env
-**/node_modules
-**/dist
-**/build
-**/target
-/supabase
-/database
+.env.*
+
+# Ignore node modules and build dirs also recursively in subfolders
+**/node_modules/
+**/dist/
+**/build/
+**/target/
+
+# Supabase and database directories
+/supabase/
+/database/
+
+# Logs (npm & yarn)
+npm-debug.log*
+yarn-error.log*
