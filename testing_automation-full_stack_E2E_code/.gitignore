@@ -1,19 +1,35 @@
+# Dependency directories
 /node_modules
-/dist
+
+# Build output directories
 /build
+/dist
 /target
+
+# Code coverage reports
+/coverage
+
+# Logs and temporary files
 /logs
 /tmp
-/data
-/config
-/backup
-/cache
 /temp
+/cache
+
+# Environment files
 .env
-**/node_modules
-**/dist
-**/build
-**/target
-/frontend
-/supabase
+
+# Data and database files/directories
+/data
 /database
+
+# Backup files
+/backup
+
+# Configuration files/directories
+/config
+
+# Frontend build or source folder
+/frontend
+
+# Supabase local files
+/supabase
