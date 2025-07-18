@@ -1,19 +1,42 @@
+# Node modules
 /node_modules
-/dist
-/build
-/target
-/logs
-/tmp
-/data
-/config
-/backup
-/cache
-/temp
-.env
 **/node_modules
+
+# Build directories
+/dist
 **/dist
+/build
 **/build
+/target
 **/target
 /frontend
-/supabase
+
+# Logs
+/logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+/tmp
+/temp
+/cache
+/data
 /database
+/backup
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Editor and IDE files
+.vscode/
+.idea/
+
+# Supabase directory
+/supabase
+
+# Config directory
+/config
