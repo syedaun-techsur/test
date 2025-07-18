@@ -3,5 +3,23 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ]
+  ],
+  "compilerOptions": {
+    "target": "es2020",                     // Modern JS target for better performance and features
+    "module": "esnext",                     // Use modern module system, compatible with most bundlers
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": false,                       // Disallow JavaScript files to enforce full typing discipline
+    "skipLibCheck": true,                   // Skip checking .d.ts files for faster builds
+    "strict": true,                        // Enable all strict type-checking options
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,                        // This tsconfig is for type checking only, no emit
+    "isolatedModules": true,               // Helpful for transpilers like Babel
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",                    // Assuming React usage for JSX
+    "composite": true                      // Enable project references support
+  },
+  "include": ["src/**/*"],                 // Typical source folder inclusion
+  "exclude": ["node_modules", "dist"]     // Exclude build output and dependencies
 }
