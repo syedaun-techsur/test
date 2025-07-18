@@ -5,7 +5,6 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
@@ -17,8 +16,8 @@ public class JwtUtil {
     @Value("${jwt.expiration:86400000}") // 24 hours
     private Long jwtExpiration;
     
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    private byte[] getSigningKey() {
+        return jwtSecret.getBytes();
     }
     
     public String generateToken(String email, Long userId) {
@@ -30,13 +29,13 @@ public class JwtUtil {
                 .claim("userId", userId)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .signWith(Keys.hmacShaKeyFor(getSigningKey()), SignatureAlgorithm.HS512)
                 .compact();
     }
     
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(Keys.hmacShaKeyFor(getSigningKey()))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -46,7 +45,7 @@ public class JwtUtil {
     
     public Long getUserIdFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(Keys.hmacShaKeyFor(getSigningKey()))
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -57,7 +56,7 @@ public class JwtUtil {
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+                    .setSigningKey(Keys.hmacShaKeyFor(getSigningKey()))
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -69,7 +68,7 @@ public class JwtUtil {
     public boolean isTokenExpired(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
+                    .setSigningKey(Keys.hmacShaKeyFor(getSigningKey()))
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
