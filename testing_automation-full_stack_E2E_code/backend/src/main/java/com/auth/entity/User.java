@@ -23,20 +23,18 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // Timestamps will be set by JPA lifecycle methods
     }
     
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -57,7 +55,9 @@ public class User {
     }
     
     public void setEmail(String email) {
-        this.email = email;
+        if (email != null) {
+            this.email = email;
+        }
     }
     
     public String getPassword() {
@@ -65,7 +65,9 @@ public class User {
     }
     
     public void setPassword(String password) {
-        this.password = password;
+        if (password != null) {
+            this.password = password;
+        }
     }
     
     public String getFirstName() {
@@ -73,7 +75,9 @@ public class User {
     }
     
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+        if (firstName != null) {
+            this.firstName = firstName;
+        }
     }
     
     public String getLastName() {
@@ -81,7 +85,9 @@ public class User {
     }
     
     public void setLastName(String lastName) {
-        this.lastName = lastName;
+        if (lastName != null) {
+            this.lastName = lastName;
+        }
     }
     
     public LocalDateTime getCreatedAt() {
@@ -100,8 +106,27 @@ public class User {
         this.updatedAt = updatedAt;
     }
     
+    @PrePersist
+    public void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+    
     @PreUpdate
-    public void preUpdate() {
+    public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+    
+    @Override
+    public String toString() {
+        return "User{" +
+               "id=" + id +
+               ", email='" + email + '\'' +
+               ", firstName='" + firstName + '\'' +
+               ", lastName='" + lastName + '\'' +
+               ", createdAt=" + createdAt +
+               ", updatedAt=" + updatedAt +
+               '}';
     }
 }
