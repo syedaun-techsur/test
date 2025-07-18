@@ -6,7 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.0</version>
-        <relativePath/>
+        <relativePath></relativePath>
     </parent>
     <groupId>com.auth</groupId>
     <artifactId>auth-backend</artifactId>
@@ -15,6 +15,7 @@
     <description>Authentication Backend with Spring Boot</description>
     <properties>
         <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
         <dependency>
