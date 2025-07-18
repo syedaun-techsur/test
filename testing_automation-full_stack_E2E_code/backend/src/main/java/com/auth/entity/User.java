@@ -23,7 +23,7 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
@@ -31,12 +31,10 @@ public class User {
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // Default constructor for JPA
     }
     
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -88,9 +86,7 @@ public class User {
         return createdAt;
     }
     
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    // No setter for createdAt to ensure immutability
     
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
@@ -100,8 +96,15 @@ public class User {
         this.updatedAt = updatedAt;
     }
     
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+    
     @PreUpdate
-    public void preUpdate() {
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }
