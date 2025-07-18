@@ -3,6 +3,7 @@ package com.auth.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.Objects;
 
 public class LoginRequest {
     
@@ -15,7 +16,8 @@ public class LoginRequest {
     private String password;
     
     // Constructors
-    public LoginRequest() {}
+    public LoginRequest() {
+    }
     
     public LoginRequest(String email, String password) {
         this.email = email;
@@ -37,5 +39,27 @@ public class LoginRequest {
     
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LoginRequest)) return false;
+        LoginRequest that = (LoginRequest) o;
+        return Objects.equals(email, that.email) &&
+                Objects.equals(password, that.password);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email, password);
+    }
+
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+                "email='" + email + '\'' +
+                ", password='[PROTECTED]'" +
+                '}';
     }
 }
