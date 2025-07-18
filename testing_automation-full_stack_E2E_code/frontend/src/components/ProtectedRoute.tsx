@@ -6,9 +6,10 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }): JSX.Element => {
   const { user, isLoading } = useAuth();
 
+  // Show loading indicator while auth status is being resolved
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-testid="loading-screen">
@@ -20,10 +21,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // Redirect to login page if user is not authenticated
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // Render protected children components if user is authenticated
   return <>{children}</>;
 };
 
