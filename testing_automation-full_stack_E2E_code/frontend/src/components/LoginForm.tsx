@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -20,17 +20,16 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const validateEmail = (email: string): boolean => {
+  const validateEmail = useCallback((email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
-  };
+  }, []);
 
-  const validateForm = (): FormErrors => {
+  const validateForm = useCallback((): FormErrors => {
     const newErrors: FormErrors = {};
 
     if (!formData.email.trim()) {
@@ -46,33 +45,31 @@ const LoginForm: React.FC = () => {
     }
 
     return newErrors;
-  };
+  }, [formData, validateEmail]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    setErrors(prev => {
-      const newErrors = { ...prev };
+    setErrors(prevErrors => {
+      const newErrors = { ...prevErrors };
       if (name === 'email') {
         if (validateEmail(value)) {
-          newErrors.email = undefined;
+          delete newErrors.email;
         }
-        // else, do not clear error
       }
       if (name === 'password') {
         if (value.length >= 6) {
-          newErrors.password = undefined;
+          delete newErrors.password;
         }
-        // else, do not clear error
       }
       return newErrors;
     });
-  };
+  }, [validateEmail]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -83,16 +80,15 @@ const LoginForm: React.FC = () => {
     setErrors({});
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
-      // Redirect to dashboard on successful login
       navigate('/dashboard', { replace: true });
     } else {
       setErrors({ submit: result.message });
     }
-    
+
     setIsSubmitting(false);
-  };
+  }, [formData.email, formData.password, login, navigate, validateForm]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -105,7 +101,7 @@ const LoginForm: React.FC = () => {
           <p className="text-gray-600">Login to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
+        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form" noValidate>
           {errors.submit && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" data-testid="error-message">
               {errors.submit}
@@ -131,10 +127,14 @@ const LoginForm: React.FC = () => {
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your email"
                 data-testid="email-input"
+                aria-invalid={!!errors.email}
+                aria-describedby="email-error"
               />
             </div>
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1" data-testid="email-error">{errors.email}</p>
+              <p className="text-red-600 text-sm mt-1" data-testid="email-error" id="email-error">
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -157,12 +157,15 @@ const LoginForm: React.FC = () => {
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your password"
                 data-testid="password-input"
+                aria-invalid={!!errors.password}
+                aria-describedby="password-error"
               />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword(prev => !prev)}
                 data-testid="toggle-password"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -171,7 +174,11 @@ const LoginForm: React.FC = () => {
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1" data-testid="password-error" id="password-error">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <button
