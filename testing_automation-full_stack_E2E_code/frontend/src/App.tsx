@@ -5,7 +5,7 @@ import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <AuthProvider>
@@ -13,20 +13,20 @@ function App() {
           <Routes>
             {/* Default route redirects to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-            
+
             {/* Login route */}
             <Route path="/login" element={<LoginForm />} />
-            
+
             {/* Protected dashboard route */}
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Catch all route redirects to login */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
@@ -34,6 +34,6 @@ function App() {
       </AuthProvider>
     </div>
   );
-}
+};
 
 export default App;
