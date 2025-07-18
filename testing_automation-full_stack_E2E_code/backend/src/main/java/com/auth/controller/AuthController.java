@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,6 +76,8 @@ public class AuthController {
     public ResponseEntity<?> logout() {
         // In a real application, you might want to blacklist the token
         // For now, we'll just return a success message
-        return ResponseEntity.ok().body("{\"message\": \"Logout successful\"}");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Logout successful");
+        return ResponseEntity.ok(response);
     }
 }
