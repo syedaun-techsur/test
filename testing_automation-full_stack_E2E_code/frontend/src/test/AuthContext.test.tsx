@@ -3,11 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch with proper typing
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 // Test component that uses the auth context
-const TestComponent = () => {
+const TestComponent: React.FC = () => {
   const { user, token, login, logout, isLoading } = useAuth();
   
   return (
@@ -69,7 +69,7 @@ describe('AuthContext', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -98,7 +98,7 @@ describe('AuthContext', () => {
       message: 'Invalid credentials'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
