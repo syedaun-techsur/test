@@ -1,6 +1,7 @@
 package com.auth.util;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -18,6 +19,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Generate token returns non-null, non-empty JWT string")
     void testGenerateToken() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -29,6 +31,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Extract email from generated token matches the input email")
     void testGetEmailFromToken() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -40,6 +43,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Extract userId from token matches the input userId")
     void testGetUserIdFromToken() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -51,6 +55,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Valid token is validated successfully")
     void testValidateTokenValid() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -62,6 +67,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Invalid token fails validation")
     void testValidateTokenInvalid() {
         String invalidToken = "invalid.token.here";
 
@@ -71,6 +77,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Token is not expired immediately after generation")
     void testIsTokenExpiredFalse() {
         String email = "test@example.com";
         Long userId = 1L;
@@ -82,6 +89,7 @@ class JwtUtilTest {
     }
 
     @Test
+    @DisplayName("Invalid token is considered expired")
     void testIsTokenExpiredTrue() {
         String invalidToken = "invalid.token.here";
 
