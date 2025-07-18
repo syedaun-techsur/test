@@ -50,7 +50,12 @@ public class AuthController {
     }
     
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || !token.startsWith("Bearer ") || token.length() <= 7) {
+            ErrorResponse errorResponse = new ErrorResponse(401, "Authorization header missing or invalid");
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
+        
         try {
             // Remove "Bearer " prefix
             String jwtToken = token.substring(7);
@@ -73,7 +78,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         // In a real application, you might want to blacklist the token
-        // For now, we'll just return a success message
+        // For now, we'll just return a success message with proper JSON
         return ResponseEntity.ok().body("{\"message\": \"Logout successful\"}");
     }
 }
