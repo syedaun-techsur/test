@@ -3,9 +3,12 @@ package com.auth.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 
-public class LoginRequest {
+public class LoginRequest implements Serializable {
     
+    private static final long serialVersionUID = 1L;
+
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email address")
     private String email;
@@ -16,7 +19,7 @@ public class LoginRequest {
     
     // Constructors
     public LoginRequest() {}
-    
+
     public LoginRequest(String email, String password) {
         this.email = email;
         this.password = password;
@@ -37,5 +40,13 @@ public class LoginRequest {
     
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+               "email='" + email + '\'' +
+               ", password='[PROTECTED]'" +
+               '}';
     }
 }
