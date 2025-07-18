@@ -1,5 +1,7 @@
 package com.auth.dto;
 
+import com.auth.dto.UserDto;
+
 public class LoginResponse {
     private String token;
     private UserDto user;
