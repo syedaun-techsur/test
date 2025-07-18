@@ -1,5 +1,6 @@
 package com.auth.util;
 
+import com.auth.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
