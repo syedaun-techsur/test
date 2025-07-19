@@ -52,6 +52,10 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
         try {
+            if (token == null || !token.startsWith("Bearer ") || token.length() <= 7) {
+                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            }
             // Remove "Bearer " prefix
             String jwtToken = token.substring(7);
             
