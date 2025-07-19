@@ -1,18 +1,34 @@
+# Dependency directories
 /node_modules
+**/node_modules
+
+# Build output directories
 /dist
+**/dist
 /build
+**/build
 /target
+**/target
+
+# Logs and temporary files
 /logs
 /tmp
-/data
+/temp
+/cache
+
+# Configuration and environment files
+.env
 /config
 /backup
-/cache
-/temp
-.env
-**/node_modules
-**/dist
-**/build
-**/target
+
+# IDE and editor settings
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Additional ignore entries (add if truly needed)
 /supabase
 /database
