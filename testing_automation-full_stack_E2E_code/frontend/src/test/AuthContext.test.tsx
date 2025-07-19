@@ -1,15 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch with proper typing
+const globalAny: any = global;
+globalAny.fetch = vi.fn();
 
 // Test component that uses the auth context
-const TestComponent = () => {
+const TestComponent: React.FC = () => {
   const { user, token, login, logout, isLoading } = useAuth();
   
+  const handleLogin = async () => {
+    await login('test@example.com', 'password123');
+  };
+
   return (
     <div>
       <div data-testid="loading">{isLoading ? 'Loading' : 'Not Loading'}</div>
@@ -17,7 +22,7 @@ const TestComponent = () => {
       <div data-testid="token">{token || 'No Token'}</div>
       <button 
         data-testid="login-btn" 
-        onClick={() => login('test@example.com', 'password123')}
+        onClick={handleLogin}
       >
         Login
       </button>
@@ -29,6 +34,10 @@ const TestComponent = () => {
 describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
     localStorage.clear();
   });
 
@@ -69,17 +78,17 @@ describe('AuthContext', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (globalAny.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
-    
+
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
+
     const loginButton = screen.getByTestId('login-btn');
     await user.click(loginButton);
     
@@ -97,18 +106,18 @@ describe('AuthContext', () => {
     const mockErrorResponse = {
       message: 'Invalid credentials'
     };
-    
-    (global.fetch as any).mockResolvedValueOnce({
+
+    (globalAny.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
-    
+
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
+
     const loginButton = screen.getByTestId('login-btn');
     await user.click(loginButton);
     
