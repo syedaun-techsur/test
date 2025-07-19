@@ -1,11 +1,11 @@
-
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Auth from './Auth';
 import Dashboard from '../components/Dashboard';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { AuthProvider } from '../context/AuthContext';
 
-const AppContent = () => {
+const AppContent: React.FC = () => {
   const { user, loading, isAuthenticated } = useAuth();
 
   // Show loading state while initializing authentication
@@ -30,7 +30,7 @@ const AppContent = () => {
   return <Auth />;
 };
 
-const Index = () => {
+const Index: React.FC = () => {
   return (
     <AuthProvider>
       <AppContent />
@@ -39,4 +39,3 @@ const Index = () => {
 };
 
 export default Index;
-
