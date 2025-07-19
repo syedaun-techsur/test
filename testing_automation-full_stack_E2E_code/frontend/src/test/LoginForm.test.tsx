@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
@@ -57,7 +57,7 @@ describe('LoginForm', () => {
     await user.type(passwordInput, 'password123');
     
     // Submit the form directly instead of clicking the button
-    fireEvent.submit(loginForm);
+    loginForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     
     // Use findByTestId to wait for the error to appear
     const emailError = await screen.findByTestId('email-error');
