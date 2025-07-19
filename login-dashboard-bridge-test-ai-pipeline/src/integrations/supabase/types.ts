@@ -4,7 +4,7 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   // Allows to automatically instanciate createClient with right options
@@ -153,4 +153,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
