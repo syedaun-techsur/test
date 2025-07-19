@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -16,11 +17,11 @@ vi.mock('../context/AuthContext', () => ({
 }));
 
 // Mock the components
-vi.mock('../pages/LoginPage', () => ({
+vi.mock('../components/LoginForm', () => ({
   default: () => <div data-testid="login-page">Login Page</div>
 }));
 
-vi.mock('../pages/DashboardPage', () => ({
+vi.mock('../components/Dashboard', () => ({
   default: () => <div data-testid="dashboard-page">Dashboard Page</div>
 }));
 
@@ -31,22 +32,28 @@ describe('App Routing', () => {
 
   it('redirects to login page by default', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('shows login page on /login route', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/login']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('redirects unknown routes to login', () => {
     render(
-      <App />
+      <MemoryRouter initialEntries={['/unknown']}>
+        <App />
+      </MemoryRouter>
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 });
