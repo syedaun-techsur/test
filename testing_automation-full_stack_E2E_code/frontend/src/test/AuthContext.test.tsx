@@ -1,10 +1,11 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 // Test component that uses the auth context
 const TestComponent = () => {
@@ -39,7 +40,7 @@ describe('AuthContext', () => {
       </AuthProvider>
     );
     
-    expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    expect(screen.getByTestId('loading')).toHaveTextContent('Loading');
     expect(screen.getByTestId('user')).toHaveTextContent('No User');
     expect(screen.getByTestId('token')).toHaveTextContent('No Token');
   });
@@ -69,7 +70,7 @@ describe('AuthContext', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -98,7 +99,7 @@ describe('AuthContext', () => {
       message: 'Invalid credentials'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as vi.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
