@@ -2,16 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://kdwcykeazhjocufxbjig.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtkd2N5a2Vhemhqb2N1ZnhiamlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNzM2MjYsImV4cCI6MjA2Nzg0OTYyNn0.yLPo9CKrJCD0cG5_yZ-YSM-Ev6Y8tSLQiXN36xizD50";
+// Retrieve Supabase URL and public key from environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// Ensure that the environment variables are set
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Supabase URL and public key must be set in environment variables.');
+}
 
+// Initialize the Supabase client
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
 });
