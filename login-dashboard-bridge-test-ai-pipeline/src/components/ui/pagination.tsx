@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ButtonProps, buttonVariants } from "@/components/ui/button"
 
-const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+const Pagination: React.FC<React.ComponentProps<"nav">> = ({ className, ...props }) => (
   <nav
     role="navigation"
     aria-label="pagination"
@@ -30,7 +30,7 @@ const PaginationItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
+  <li ref={ref} className={cn(className)} {...props} />
 ))
 PaginationItem.displayName = "PaginationItem"
 
@@ -39,12 +39,12 @@ type PaginationLinkProps = {
 } & Pick<ButtonProps, "size"> &
   React.ComponentProps<"a">
 
-const PaginationLink = ({
+const PaginationLink: React.FC<PaginationLinkProps> = ({
   className,
   isActive,
   size = "icon",
   ...props
-}: PaginationLinkProps) => (
+}) => (
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
@@ -59,10 +59,10 @@ const PaginationLink = ({
 )
 PaginationLink.displayName = "PaginationLink"
 
-const PaginationPrevious = ({
+const PaginationPrevious: React.FC<React.ComponentProps<typeof PaginationLink>> = ({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}) => (
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
@@ -75,10 +75,10 @@ const PaginationPrevious = ({
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
-const PaginationNext = ({
+const PaginationNext: React.FC<React.ComponentProps<typeof PaginationLink>> = ({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
+}) => (
   <PaginationLink
     aria-label="Go to next page"
     size="default"
@@ -91,12 +91,12 @@ const PaginationNext = ({
 )
 PaginationNext.displayName = "PaginationNext"
 
-const PaginationEllipsis = ({
+const PaginationEllipsis: React.FC<React.ComponentProps<"span">> = ({
   className,
   ...props
-}: React.ComponentProps<"span">) => (
+}) => (
   <span
-    aria-hidden
+    aria-hidden="true"
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
@@ -115,4 +115,3 @@ export {
   PaginationNext,
   PaginationPrevious,
 }
-
