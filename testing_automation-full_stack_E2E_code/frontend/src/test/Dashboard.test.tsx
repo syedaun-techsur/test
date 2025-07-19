@@ -1,10 +1,9 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter, useNavigate } from 'react-router-dom';
 import Dashboard from '../components/Dashboard';
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import { User, LogOut } from 'lucide-react';
 
 // Mock the useAuth hook
 vi.mock('../context/AuthContext', async () => {
@@ -80,10 +79,10 @@ describe('Dashboard', () => {
   it('calls logout function when logout button is clicked', async () => {
     const user = userEvent.setup();
     const mockLogout = vi.fn();
-    
+
     // Create a custom Dashboard component with the mock logout
     const CustomDashboard = () => {
-      const { user } = useAuth();
+      const { user } = vi.mocked(require('../context/AuthContext')).useAuth();
       const navigate = useNavigate();
       
       const handleLogout = () => {
@@ -98,7 +97,7 @@ describe('Dashboard', () => {
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center">
                   <div className="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="7" r="4" /><path d="M5.5 21a6.5 6.5 0 0113 0" /></svg>
                   </div>
                   <h1 className="ml-3 text-xl font-semibold text-gray-900">Dashboard</h1>
                 </div>
@@ -112,7 +111,7 @@ describe('Dashboard', () => {
                     className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                     data-testid="logout-button"
                   >
-                    <LogOut className="w-4 h-4 mr-1" />
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
                     Logout
                   </button>
                 </div>
