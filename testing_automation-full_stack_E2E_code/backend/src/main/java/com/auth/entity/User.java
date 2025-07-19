@@ -31,12 +31,9 @@ public class User {
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
     
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -98,6 +95,13 @@ public class User {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
     
     @PreUpdate
