@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LogOut, User, Mail, Calendar, Activity, Settings, Bell } from 'lucide-react';
+import { LogOut, User, Calendar, Activity, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '../context/AuthContext';
@@ -269,4 +269,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
