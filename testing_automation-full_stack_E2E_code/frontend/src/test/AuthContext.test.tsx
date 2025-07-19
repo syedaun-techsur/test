@@ -1,10 +1,11 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // Mock fetch
-global.fetch = vi.fn();
+(global.fetch as unknown) = vi.fn();
 
 // Test component that uses the auth context
 const TestComponent = () => {
@@ -69,7 +70,7 @@ describe('AuthContext', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -98,7 +99,7 @@ describe('AuthContext', () => {
       message: 'Invalid credentials'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
