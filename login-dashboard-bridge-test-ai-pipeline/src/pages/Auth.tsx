@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,8 +32,8 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      let result;
-      
+      let result: { error: { message: string } | null };
+
       if (isLogin) {
         result = await signIn(formData.email, formData.password);
       } else {
@@ -44,6 +43,7 @@ const Auth = () => {
             description: "Name is required for signup",
             variant: "destructive",
           });
+          setIsLoading(false);
           return;
         }
         result = await signUp(formData.email, formData.password, formData.name);
@@ -187,4 +187,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
