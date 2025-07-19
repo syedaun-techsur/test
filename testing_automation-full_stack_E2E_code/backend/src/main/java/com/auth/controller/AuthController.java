@@ -3,7 +3,6 @@ package com.auth.controller;
 import com.auth.dto.ErrorResponse;
 import com.auth.dto.LoginRequest;
 import com.auth.dto.LoginResponse;
-import com.auth.dto.UserDto;
 import com.auth.service.AuthService;
 import com.auth.util.JwtUtil;
 import jakarta.validation.Valid;
@@ -13,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,10 +51,10 @@ public class AuthController {
     }
     
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
+    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
         try {
-            if (token == null || !token.startsWith("Bearer ") || token.length() <= 7) {
-                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid or missing Authorization header");
+            if (token == null || !token.startsWith("Bearer ")) {
+                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
                 return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
             }
             // Remove "Bearer " prefix
@@ -66,9 +66,7 @@ public class AuthController {
             }
             
             String email = jwtUtil.getEmailFromToken(jwtToken);
-            UserDto user = authService.getUserByEmail(email);
-            
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(authService.getUserByEmail(email));
         } catch (Exception e) {
             ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
@@ -79,6 +77,8 @@ public class AuthController {
     public ResponseEntity<?> logout() {
         // In a real application, you might want to blacklist the token
         // For now, we'll just return a success message
-        return ResponseEntity.ok(Map.of("message", "Logout successful"));
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Logout successful");
+        return ResponseEntity.ok(response);
     }
 }
