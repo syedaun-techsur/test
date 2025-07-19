@@ -1,6 +1,10 @@
-import * as AspectRatioPrimitive from "@radix-ui/react-aspect-ratio"
+import { Root as AspectRatioRoot } from "@radix-ui/react-aspect-ratio";
 
-const AspectRatio = AspectRatioPrimitive.Root
+type AspectRatioProps = React.ComponentProps<typeof AspectRatioRoot>;
 
-export { AspectRatio }
+const AspectRatio: React.FC<AspectRatioProps> = (props) => {
+  return <AspectRatioRoot {...props} />;
+};
 
+export { AspectRatio, AspectRatioRoot };
+export default AspectRatio;
