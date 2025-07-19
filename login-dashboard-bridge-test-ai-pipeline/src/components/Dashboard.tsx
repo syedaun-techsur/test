@@ -13,7 +13,7 @@ interface UserProfile {
   created_at: string;
 }
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const { user, signOut, isAuthenticated } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -24,13 +24,12 @@ const Dashboard = () => {
   }
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfile = async (): Promise<void> => {
       if (!user) return;
-      
+
       try {
-        // Use any type to bypass TypeScript error until types are regenerated
-        const { data, error } = await (supabase as any)
-          .from('profiles')
+        const { data, error } = await supabase
+          .from<UserProfile>('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
@@ -42,9 +41,9 @@ const Dashboard = () => {
             id: user.id,
             email: user.email || '',
             name: user.user_metadata?.name || user.email || '',
-            created_at: user.created_at || new Date().toISOString()
+            created_at: new Date().toISOString()
           });
-        } else {
+        } else if (data) {
           setProfile(data);
         }
       } catch (error) {
@@ -54,7 +53,7 @@ const Dashboard = () => {
           id: user.id,
           email: user.email || '',
           name: user.user_metadata?.name || user.email || '',
-          created_at: user.created_at || new Date().toISOString()
+          created_at: new Date().toISOString()
         });
       } finally {
         setProfileLoading(false);
@@ -66,7 +65,7 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     console.log('Dashboard: Logout button clicked');
-    
+
     try {
       await signOut();
       toast({
@@ -140,7 +139,7 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
@@ -269,4 +268,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
