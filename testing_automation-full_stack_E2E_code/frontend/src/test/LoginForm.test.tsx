@@ -5,8 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { AuthProvider } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch with correct typing
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 const MockedLoginForm = () => (
   <BrowserRouter>
@@ -56,10 +56,9 @@ describe('LoginForm', () => {
     await user.type(emailInput, 'invalid-email');
     await user.type(passwordInput, 'password123');
     
-    // Submit the form directly instead of clicking the button
     fireEvent.submit(loginForm);
     
-    // Use findByTestId to wait for the error to appear
+    // Wait for error message to appear asynchronously
     const emailError = await screen.findByTestId('email-error');
     expect(emailError).toHaveTextContent('Please enter a valid email address');
   });
@@ -101,10 +100,10 @@ describe('LoginForm', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
-    });
+    } as Response);
     
     render(<MockedLoginForm />);
     
@@ -131,10 +130,10 @@ describe('LoginForm', () => {
       message: 'Invalid email or password'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
-    });
+    } as Response);
     
     render(<MockedLoginForm />);
     
