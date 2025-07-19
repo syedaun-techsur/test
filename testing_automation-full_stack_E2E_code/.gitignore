@@ -8,6 +8,7 @@
 /config
 /backup
 /cache
+/temp
 .env
 /supabase
 /database
