@@ -7,9 +7,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
+    setupFiles: ['./src/test/setup.ts'],
   },
   optimizeDeps: {
+    // Exclude lucide-react from dependency pre-bundling
     exclude: ['lucide-react'],
   },
 });
