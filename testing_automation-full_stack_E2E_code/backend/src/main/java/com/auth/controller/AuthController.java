@@ -14,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -50,8 +51,12 @@ public class AuthController {
     }
     
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
         try {
+            if (token == null || !token.startsWith("Bearer ") || token.length() <= 7) {
+                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid or missing Authorization header");
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            }
             // Remove "Bearer " prefix
             String jwtToken = token.substring(7);
             
@@ -74,6 +79,6 @@ public class AuthController {
     public ResponseEntity<?> logout() {
         // In a real application, you might want to blacklist the token
         // For now, we'll just return a success message
-        return ResponseEntity.ok().body("{\"message\": \"Logout successful\"}");
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
     }
 }
