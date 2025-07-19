@@ -1,10 +1,10 @@
-import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
+/**
+ * Collapsible UI components based on Radix UI's react-collapsible primitives.
+ * Provides accessible and customizable collapsible container, trigger, and content components.
+ */
 
-const Collapsible = CollapsiblePrimitive.Root
+import type { RootProps, CollapsibleTriggerProps, CollapsibleContentProps } from "@radix-ui/react-collapsible";
+import { Root as Collapsible, CollapsibleTrigger, CollapsibleContent } from "@radix-ui/react-collapsible";
 
-const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger
-
-const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent
-
-export { Collapsible, CollapsibleTrigger, CollapsibleContent }
-
+export type { RootProps, CollapsibleTriggerProps, CollapsibleContentProps };
+export { Collapsible, CollapsibleTrigger, CollapsibleContent };
