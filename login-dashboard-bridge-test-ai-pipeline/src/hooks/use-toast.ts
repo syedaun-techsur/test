@@ -13,6 +13,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  open?: boolean
 }
 
 const actionTypes = {
@@ -24,7 +25,7 @@ const actionTypes = {
 
 let count = 0
 
-function genId() {
+function genId(): string {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
 }
@@ -38,7 +39,7 @@ type Action =
     }
   | {
       type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
+      toast: Partial<ToasterToast> & { id: string }
     }
   | {
       type: ActionType["DISMISS_TOAST"]
@@ -53,9 +54,20 @@ interface State {
   toasts: ToasterToast[]
 }
 
+const listeners: Array<(state: State) => void> = []
+
+let memoryState: State = { toasts: [] }
+
+function dispatch(action: Action): void {
+  memoryState = reducer(memoryState, action)
+  listeners.forEach((listener) => {
+    listener(memoryState)
+  })
+}
+
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string) => {
+const addToRemoveQueue = (toastId: string): void => {
   if (toastTimeouts.has(toastId)) {
     return
   }
@@ -64,7 +76,7 @@ const addToRemoveQueue = (toastId: string) => {
     toastTimeouts.delete(toastId)
     dispatch({
       type: "REMOVE_TOAST",
-      toastId: toastId,
+      toastId,
     })
   }, TOAST_REMOVE_DELAY)
 
@@ -90,8 +102,7 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // Side effects: add to removal queue
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -103,15 +114,13 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
+          toastId === undefined || t.id === toastId
+            ? { ...t, open: false }
             : t
         ),
       }
     }
+
     case "REMOVE_TOAST":
       if (action.toastId === undefined) {
         return {
@@ -126,27 +135,17 @@ export const reducer = (state: State, action: Action): State => {
   }
 }
 
-const listeners: Array<(state: State) => void> = []
-
-let memoryState: State = { toasts: [] }
-
-function dispatch(action: Action) {
-  memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
-}
-
 type Toast = Omit<ToasterToast, "id">
 
-function toast({ ...props }: Toast) {
+function toast(props: Toast) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (props: Partial<ToasterToast> & { id?: string }) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
     })
+
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
   dispatch({
@@ -155,14 +154,14 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss()
       },
     },
   })
 
   return {
-    id: id,
+    id,
     dismiss,
     update,
   }
@@ -179,7 +178,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,
@@ -189,4 +188,3 @@ function useToast() {
 }
 
 export { useToast, toast }
-
