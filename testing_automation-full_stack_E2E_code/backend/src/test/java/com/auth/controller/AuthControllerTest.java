@@ -18,7 +18,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
@@ -89,7 +91,7 @@ class AuthControllerTest {
     @Test
     void testGetCurrentUserSuccess() throws Exception {
         String token = "Bearer mock-token";
-        
+
         when(jwtUtil.validateToken("mock-token")).thenReturn(true);
         when(jwtUtil.getEmailFromToken("mock-token")).thenReturn("admin@example.com");
         when(authService.getUserByEmail("admin@example.com")).thenReturn(userDto);
@@ -105,7 +107,7 @@ class AuthControllerTest {
     @Test
     void testGetCurrentUserWithInvalidToken() throws Exception {
         String token = "Bearer invalid-token";
-        
+
         when(jwtUtil.validateToken("invalid-token")).thenReturn(false);
 
         mockMvc.perform(get("/api/auth/me")
