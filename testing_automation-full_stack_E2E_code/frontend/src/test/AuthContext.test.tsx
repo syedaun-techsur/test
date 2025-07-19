@@ -3,13 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock fetch globally
+global.fetch = vi.fn() as jest.Mock;
 
-// Test component that uses the auth context
 const TestComponent = () => {
   const { user, token, login, logout, isLoading } = useAuth();
-  
+
   return (
     <div>
       <div data-testid="loading">{isLoading ? 'Loading' : 'Not Loading'}</div>
@@ -32,33 +31,42 @@ describe('AuthContext', () => {
     localStorage.clear();
   });
 
-  it('provides initial state correctly', () => {
+  it('provides initial state correctly', async () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
+
+    // Initially loading is true, so show Loading text
+    expect(screen.getByTestId('loading')).toHaveTextContent('Loading');
+
+    // Wait for loading to finish
+    await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading'));
     
-    expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
     expect(screen.getByTestId('user')).toHaveTextContent('No User');
     expect(screen.getByTestId('token')).toHaveTextContent('No Token');
   });
 
-  it('loads user from localStorage on initialization', () => {
+  it('loads user from localStorage on initialization', async () => {
     const mockUser = { id: 1, email: 'test@example.com', firstName: 'John', lastName: 'Doe' };
     const mockToken = 'mock-token';
-    
+
     localStorage.setItem('user', JSON.stringify(mockUser));
     localStorage.setItem('authToken', mockToken);
-    
+
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
-    expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
-    expect(screen.getByTestId('token')).toHaveTextContent('mock-token');
+
+    // Wait for loading to finish and user to populate
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
+      expect(screen.getByTestId('token')).toHaveTextContent('mock-token');
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    });
   });
 
   it('handles successful login', async () => {
@@ -68,26 +76,27 @@ describe('AuthContext', () => {
       user: { id: 1, email: 'test@example.com', firstName: 'Jane', lastName: 'Smith' },
       message: 'Login successful'
     };
-    
-    (global.fetch as any).mockResolvedValueOnce({
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
-    
+
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
+
     const loginButton = screen.getByTestId('login-btn');
     await user.click(loginButton);
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('user')).toHaveTextContent('Jane Smith');
       expect(screen.getByTestId('token')).toHaveTextContent('new-token');
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
     });
-    
+
     expect(localStorage.getItem('authToken')).toBe('new-token');
     expect(JSON.parse(localStorage.getItem('user') || '{}')).toEqual(mockResponse.user);
   });
@@ -97,24 +106,25 @@ describe('AuthContext', () => {
     const mockErrorResponse = {
       message: 'Invalid credentials'
     };
-    
-    (global.fetch as any).mockResolvedValueOnce({
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
-    
+
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
+
     const loginButton = screen.getByTestId('login-btn');
     await user.click(loginButton);
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('user')).toHaveTextContent('No User');
       expect(screen.getByTestId('token')).toHaveTextContent('No Token');
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
     });
   });
 
@@ -122,25 +132,27 @@ describe('AuthContext', () => {
     const user = userEvent.setup();
     const mockUser = { id: 1, email: 'test@example.com', firstName: 'John', lastName: 'Doe' };
     const mockToken = 'mock-token';
-    
+
     localStorage.setItem('user', JSON.stringify(mockUser));
     localStorage.setItem('authToken', mockToken);
-    
+
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
-    // Verify user is logged in
-    expect(screen.getByTestId('user')).toHaveTextContent('John Doe');
-    
+
+    await waitFor(() => expect(screen.getByTestId('user')).toHaveTextContent('John Doe'));
+
     const logoutButton = screen.getByTestId('logout-btn');
     await user.click(logoutButton);
-    
-    expect(screen.getByTestId('user')).toHaveTextContent('No User');
-    expect(screen.getByTestId('token')).toHaveTextContent('No Token');
-    expect(localStorage.getItem('authToken')).toBeNull();
-    expect(localStorage.getItem('user')).toBeNull();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('No User');
+      expect(screen.getByTestId('token')).toHaveTextContent('No Token');
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(localStorage.getItem('user')).toBeNull();
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
+    });
   });
 });
