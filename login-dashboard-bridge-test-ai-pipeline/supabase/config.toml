@@ -1,1 +1,18 @@
+# Supabase configuration file
+
+# Project ID is required for identifying the Supabase project
 project_id = "kdwcykeazhjocufxbjig"
+
+# URL for the Supabase instance - typically required for API calls
+url = "https://your-project-ref.supabase.co"
+
+# Public anon key for client authentication - replace with your actual anon key
+anon_key = "your-anon-key-placeholder"
+
+# Service role key for privileged operations - should be kept secret
+service_role_key = "your-service-role-key-placeholder"
+
+# Optionally define the schema to use (default is 'public')
+schema = "public"
+
+# Additional optional settings can be added below as necessary
