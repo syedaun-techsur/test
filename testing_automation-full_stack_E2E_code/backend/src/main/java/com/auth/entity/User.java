@@ -1,6 +1,13 @@
 package com.auth.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,12 +38,10 @@ public class User {
     
     // Constructors
     public User() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        // No initialization here; timestamps set on persist
     }
     
     public User(String email, String password, String firstName, String lastName) {
-        this();
         this.email = email;
         this.password = password;
         this.firstName = firstName;
@@ -98,6 +103,13 @@ public class User {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
     
     @PreUpdate
