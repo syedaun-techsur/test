@@ -12,11 +12,15 @@ const Dashboard: React.FC = () => {
     navigate('/login', { replace: true });
   };
 
-  const stats = [
+  const stats: { label: string; value: string; icon: React.ElementType; color: string }[] = [
     { label: 'Total Projects', value: '12', icon: Activity, color: 'bg-blue-500' },
     { label: 'Active Tasks', value: '8', icon: Calendar, color: 'bg-green-500' },
     { label: 'Notifications', value: '3', icon: Bell, color: 'bg-yellow-500' },
   ];
+
+  if (!user) {
+    return null; // or a loading state if preferred
+  }
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="dashboard">
@@ -30,10 +34,10 @@ const Dashboard: React.FC = () => {
               </div>
               <h1 className="ml-3 text-xl font-semibold text-gray-900">Dashboard</h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600" data-testid="welcome-message">
-                Welcome back, <span className="font-medium">{user?.firstName}</span>
+                Welcome back, <span className="font-medium">{user.firstName}</span>
               </div>
               <button
                 onClick={handleLogout}
@@ -53,26 +57,33 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Good morning, {user?.firstName}!
+            Good morning, {user.firstName}!
           </h2>
           <p className="text-gray-600">Here's what's happening with your account today.</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow" data-testid={`stat-card-${index}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <div
+                key={index}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                data-testid={`stat-card-${index}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  </div>
+                  <div className={`${stat.color} p-3 rounded-lg`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* User Info Card */}
@@ -84,15 +95,15 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="first-name">{user?.firstName}</p>
+              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="first-name">{user.firstName}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="last-name">{user?.lastName}</p>
+              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="last-name">{user.lastName}</p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="email">{user?.email}</p>
+              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="email">{user.email}</p>
             </div>
           </div>
         </div>
