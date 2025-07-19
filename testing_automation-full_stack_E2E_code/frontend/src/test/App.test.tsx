@@ -16,11 +16,11 @@ vi.mock('../context/AuthContext', () => ({
 }));
 
 // Mock the components
-vi.mock('../pages/LoginPage', () => ({
+vi.mock('../components/LoginForm', () => ({
   default: () => <div data-testid="login-page">Login Page</div>
 }));
 
-vi.mock('../pages/DashboardPage', () => ({
+vi.mock('../components/Dashboard', () => ({
   default: () => <div data-testid="dashboard-page">Dashboard Page</div>
 }));
 
@@ -33,20 +33,20 @@ describe('App Routing', () => {
     render(
       <App />
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('shows login page on /login route', () => {
     render(
       <App />
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 
   it('redirects unknown routes to login', () => {
     render(
       <App />
     );
-    expect(screen.getByTestId('login-form')).toBeInTheDocument();
+    expect(screen.getByTestId('login-page')).toBeInTheDocument();
   });
 });
