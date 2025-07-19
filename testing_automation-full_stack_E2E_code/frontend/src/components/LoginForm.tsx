@@ -52,25 +52,20 @@ const LoginForm: React.FC = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
+    // Clear relevant error if current input is valid
     setErrors(prev => {
       const newErrors = { ...prev };
-      if (name === 'email') {
-        if (validateEmail(value)) {
-          newErrors.email = undefined;
-        }
-        // else, do not clear error
+      if (name === 'email' && validateEmail(value)) {
+        delete newErrors.email;
       }
-      if (name === 'password') {
-        if (value.length >= 6) {
-          newErrors.password = undefined;
-        }
-        // else, do not clear error
+      if (name === 'password' && value.length >= 6) {
+        delete newErrors.password;
       }
       return newErrors;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     const validationErrors = validateForm();
@@ -105,9 +100,14 @@ const LoginForm: React.FC = () => {
           <p className="text-gray-600">Login to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
+        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form" noValidate>
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" data-testid="error-message">
+            <div
+              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+              data-testid="error-message"
+              role="alert"
+              aria-live="polite"
+            >
               {errors.submit}
             </div>
           )}
@@ -131,10 +131,15 @@ const LoginForm: React.FC = () => {
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your email"
                 data-testid="email-input"
+                autoComplete="email"
+                aria-invalid={errors.email ? 'true' : 'false'}
+                aria-describedby={errors.email ? 'email-error' : undefined}
               />
             </div>
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1" data-testid="email-error">{errors.email}</p>
+              <p className="text-red-600 text-sm mt-1" data-testid="email-error" id="email-error" role="alert" aria-live="polite">
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -157,9 +162,13 @@ const LoginForm: React.FC = () => {
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                 placeholder="Enter your password"
                 data-testid="password-input"
+                autoComplete="current-password"
+                aria-invalid={errors.password ? 'true' : 'false'}
+                aria-describedby={errors.password ? 'password-error' : undefined}
               />
               <button
                 type="button"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
                 data-testid="toggle-password"
@@ -171,7 +180,11 @@ const LoginForm: React.FC = () => {
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1" data-testid="password-error" id="password-error" role="alert" aria-live="polite">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <button
@@ -182,7 +195,7 @@ const LoginForm: React.FC = () => {
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
                 Logging in...
               </div>
             ) : (
