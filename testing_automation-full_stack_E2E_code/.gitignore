@@ -10,10 +10,6 @@
 /cache
 /temp
 .env
-**/node_modules
-**/dist
-**/build
-**/target
 /backend
 /supabase
 /database
