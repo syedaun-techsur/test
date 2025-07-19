@@ -8,12 +8,6 @@
 /config
 /backup
 /cache
-/temp
 .env
-**/node_modules
-**/dist
-**/build
-**/target
-/frontend
 /supabase
 /database
