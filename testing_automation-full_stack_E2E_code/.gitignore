@@ -14,5 +14,6 @@
 **/dist
 **/build
 **/target
+/backend
 /supabase
 /database
