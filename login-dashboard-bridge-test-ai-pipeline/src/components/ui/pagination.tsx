@@ -36,6 +36,7 @@ PaginationItem.displayName = "PaginationItem"
 
 type PaginationLinkProps = {
   isActive?: boolean
+  children?: React.ReactNode
 } & Pick<ButtonProps, "size"> &
   React.ComponentProps<"a">
 
@@ -43,6 +44,7 @@ const PaginationLink = ({
   className,
   isActive,
   size = "icon",
+  children,
   ...props
 }: PaginationLinkProps) => (
   <a
@@ -55,12 +57,15 @@ const PaginationLink = ({
       className
     )}
     {...props}
-  />
+  >
+    {children}
+  </a>
 )
 PaginationLink.displayName = "PaginationLink"
 
 const PaginationPrevious = ({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
@@ -69,14 +74,19 @@ const PaginationPrevious = ({
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
-    <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
+    {children ?? (
+      <>
+        <ChevronLeft className="h-4 w-4" />
+        <span>Previous</span>
+      </>
+    )}
   </PaginationLink>
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
 const PaginationNext = ({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
@@ -85,8 +95,12 @@ const PaginationNext = ({
     className={cn("gap-1 pr-2.5", className)}
     {...props}
   >
-    <span>Next</span>
-    <ChevronRight className="h-4 w-4" />
+    {children ?? (
+      <>
+        <span>Next</span>
+        <ChevronRight className="h-4 w-4" />
+      </>
+    )}
   </PaginationLink>
 )
 PaginationNext.displayName = "PaginationNext"
@@ -115,4 +129,3 @@ export {
   PaginationNext,
   PaginationPrevious,
 }
-
