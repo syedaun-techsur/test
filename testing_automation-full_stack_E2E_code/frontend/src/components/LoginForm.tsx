@@ -9,6 +9,8 @@ interface FormErrors {
   submit?: string;
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const LoginForm: React.FC = () => {
   const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -20,15 +22,11 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email: string): boolean => EMAIL_REGEX.test(email);
 
   const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
@@ -50,29 +48,28 @@ const LoginForm: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    setErrors(prev => {
-      const newErrors = { ...prev };
+    setErrors((prevErrors) => {
+      const updatedErrors = { ...prevErrors };
+
       if (name === 'email') {
         if (validateEmail(value)) {
-          newErrors.email = undefined;
+          delete updatedErrors.email;
         }
-        // else, do not clear error
       }
       if (name === 'password') {
         if (value.length >= 6) {
-          newErrors.password = undefined;
+          delete updatedErrors.password;
         }
-        // else, do not clear error
       }
-      return newErrors;
+      return updatedErrors;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -83,14 +80,13 @@ const LoginForm: React.FC = () => {
     setErrors({});
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
-      // Redirect to dashboard on successful login
       navigate('/dashboard', { replace: true });
     } else {
       setErrors({ submit: result.message });
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -105,9 +101,14 @@ const LoginForm: React.FC = () => {
           <p className="text-gray-600">Login to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form">
+        <form onSubmit={handleSubmit} className="space-y-6" data-testid="login-form" noValidate>
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" data-testid="error-message">
+            <div
+              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+              data-testid="error-message"
+              role="alert"
+              aria-live="polite"
+            >
               {errors.submit}
             </div>
           )}
@@ -126,15 +127,20 @@ const LoginForm: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`block w-full pl-10 pr-3 py-3 border ${
+                className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                }`}
                 placeholder="Enter your email"
                 data-testid="email-input"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : undefined}
+                autoComplete="email"
               />
             </div>
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1" data-testid="email-error">{errors.email}</p>
+              <p className="text-red-600 text-sm mt-1" id="email-error" data-testid="email-error">
+                {errors.email}
+              </p>
             )}
           </div>
 
@@ -152,17 +158,21 @@ const LoginForm: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`block w-full pl-10 pr-10 py-3 border ${
+                className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
                   errors.password ? 'border-red-300' : 'border-gray-300'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                }`}
                 placeholder="Enter your password"
                 data-testid="password-input"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
+                autoComplete="current-password"
               />
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword((show) => !show)}
                 data-testid="toggle-password"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -171,7 +181,11 @@ const LoginForm: React.FC = () => {
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1" id="password-error" data-testid="password-error">
+                {errors.password}
+              </p>
+            )}
           </div>
 
           <button
@@ -182,7 +196,7 @@ const LoginForm: React.FC = () => {
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
                 Logging in...
               </div>
             ) : (
@@ -192,9 +206,7 @@ const LoginForm: React.FC = () => {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Demo credentials: admin@example.com / password123
-          </p>
+          <p className="text-sm text-gray-600">Demo credentials: admin@example.com / password123</p>
         </div>
       </div>
     </div>
