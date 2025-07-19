@@ -1,10 +1,10 @@
-import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
+import React from "react";
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 
-const Collapsible = CollapsiblePrimitive.Root
+const Collapsible: React.FC<React.ComponentProps<typeof CollapsiblePrimitive.Root>> = CollapsiblePrimitive.Root;
 
-const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger
+const CollapsibleTrigger: React.FC<React.ComponentProps<typeof CollapsiblePrimitive.Trigger>> = CollapsiblePrimitive.Trigger;
 
-const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent
+const CollapsibleContent: React.FC<React.ComponentProps<typeof CollapsiblePrimitive.Content>> = CollapsiblePrimitive.Content;
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent }
-
+export { Collapsible, CollapsibleTrigger, CollapsibleContent };
