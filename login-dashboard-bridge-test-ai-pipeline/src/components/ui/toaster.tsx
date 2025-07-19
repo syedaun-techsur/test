@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts }: { toasts: Array<{ id: string | number; title?: string; description?: string; action?: React.ReactNode; [key: string]: any }> } = useToast()
 
   return (
     <ToastProvider>
@@ -31,4 +31,3 @@ export function Toaster() {
     </ToastProvider>
   )
 }
-
