@@ -5,14 +5,14 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    /* Bundler mode */
+    "_comment_module_resolution_mode": "bundler mode for modern bundlers like Vite",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
 
-    /* Linting */
+    "_comment_linting_enforcements": "strict type checks and no unused code",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
