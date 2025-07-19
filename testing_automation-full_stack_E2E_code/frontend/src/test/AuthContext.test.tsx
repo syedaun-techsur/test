@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn() as unknown as typeof fetch;
 
 // Test component that uses the auth context
 const TestComponent = () => {
@@ -69,7 +69,7 @@ describe('AuthContext', () => {
       message: 'Login successful'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
     });
@@ -98,7 +98,7 @@ describe('AuthContext', () => {
       message: 'Invalid credentials'
     };
     
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as jest.Mock).mockResolvedValueOnce({
       ok: false,
       json: async () => mockErrorResponse,
     });
