@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
@@ -9,10 +9,10 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AuthProvider>
-        <Router>
+        <BrowserRouter>
           <Routes>
             {/* Default route redirects to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<LoginForm />} />
             
             {/* Login route */}
             <Route path="/login" element={<LoginForm />} />
@@ -28,9 +28,9 @@ function App() {
             />
             
             {/* Catch all route redirects to login */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<LoginForm />} />
           </Routes>
-        </Router>
+        </BrowserRouter>
       </AuthProvider>
     </div>
   );
