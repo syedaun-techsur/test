@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, useUser } from '../context/AuthContext';
 
 interface FormErrors {
   email?: string;
@@ -10,7 +10,8 @@ interface FormErrors {
 }
 
 const LoginForm: React.FC = () => {
-  const { user, login, isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -20,7 +21,7 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
+  // Redirect if user already logged in
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -48,7 +49,7 @@ const LoginForm: React.FC = () => {
     return newErrors;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
@@ -58,21 +59,21 @@ const LoginForm: React.FC = () => {
         if (validateEmail(value)) {
           newErrors.email = undefined;
         }
-        // else, do not clear error
+        // keep error if invalid email
       }
       if (name === 'password') {
         if (value.length >= 6) {
           newErrors.password = undefined;
         }
-        // else, do not clear error
+        // keep error if too short
       }
       return newErrors;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -83,14 +84,14 @@ const LoginForm: React.FC = () => {
     setErrors({});
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
       // Redirect to dashboard on successful login
       navigate('/dashboard', { replace: true });
     } else {
       setErrors({ submit: result.message });
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -126,6 +127,7 @@ const LoginForm: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
+                autoComplete="email"
                 className={`block w-full pl-10 pr-3 py-3 border ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
@@ -152,6 +154,7 @@ const LoginForm: React.FC = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
+                autoComplete="current-password"
                 className={`block w-full pl-10 pr-10 py-3 border ${
                   errors.password ? 'border-red-300' : 'border-gray-300'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
@@ -160,6 +163,7 @@ const LoginForm: React.FC = () => {
               />
               <button
                 type="button"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 onClick={() => setShowPassword(!showPassword)}
                 data-testid="toggle-password"
@@ -182,7 +186,7 @@ const LoginForm: React.FC = () => {
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
                 Logging in...
               </div>
             ) : (
