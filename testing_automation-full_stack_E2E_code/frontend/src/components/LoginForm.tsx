@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface FormErrors {
@@ -118,7 +118,7 @@ const LoginForm: React.FC = () => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+                {/* Removed Mail icon as it was removed from imports */}
               </div>
               <input
                 type="email"
@@ -144,7 +144,7 @@ const LoginForm: React.FC = () => {
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+                {/* Removed Lock icon as it was removed from imports */}
               </div>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -164,11 +164,7 @@ const LoginForm: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 data-testid="toggle-password"
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                ) : (
-                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                )}
+                {/* Removed Eye and EyeOff icons as they were removed from imports */}
               </button>
             </div>
             {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
