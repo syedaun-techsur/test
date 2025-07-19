@@ -5,35 +5,33 @@ import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Router>
       <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Default route redirects to login */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            
-            {/* Login route */}
-            <Route path="/login" element={<LoginForm />} />
-            
-            {/* Protected dashboard route */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* Catch all route redirects to login */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Router>
+        <Routes>
+          {/* Default route redirects to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Login route */}
+          <Route path="/login" element={<LoginForm />} />
+
+          {/* Protected dashboard route */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch-all route redirects to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
       </AuthProvider>
-    </div>
+    </Router>
   );
-}
+};
 
 export default App;
