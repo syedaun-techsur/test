@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Auth from './Auth';
 import Dashboard from '../components/Dashboard';
@@ -39,4 +39,3 @@ const Index = () => {
 };
 
 export default Index;
-
