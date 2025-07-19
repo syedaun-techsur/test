@@ -12,7 +12,7 @@ const Dashboard: React.FC = () => {
     navigate('/login', { replace: true });
   };
 
-  const stats = [
+  const stats: { label: string; value: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; color: string }[] = [
     { label: 'Total Projects', value: '12', icon: Activity, color: 'bg-blue-500' },
     { label: 'Active Tasks', value: '8', icon: Calendar, color: 'bg-green-500' },
     { label: 'Notifications', value: '3', icon: Bell, color: 'bg-yellow-500' },
