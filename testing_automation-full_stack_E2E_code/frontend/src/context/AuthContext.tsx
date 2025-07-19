@@ -35,10 +35,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on app startup
     const savedToken = localStorage.getItem('authToken');
     const savedUser = localStorage.getItem('user');
-    
+
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
@@ -57,18 +56,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        return { success: true };
-      } else {
-        return { success: false, message: data.message || 'Login failed' };
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, message: errorData.message || 'Login failed' };
       }
+
+      const data = await response.json();
+      setToken(data.token);
+      setUser(data.user);
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
       return { success: false, message: 'Network error. Please try again.' };
     } finally {
       setIsLoading(false);
