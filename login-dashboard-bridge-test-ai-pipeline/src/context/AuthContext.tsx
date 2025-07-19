@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -31,35 +30,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!session && !!user;
 
   useEffect(() => {
-    console.log('AuthContext: Setting up Supabase auth listener');
-
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('AuthContext: Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange().subscribe(
+      (event: AuthChangeEvent, session: Session | null) => {
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
       }
     );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthContext: Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
-      console.log('AuthContext: Cleaning up auth listener');
       subscription.unsubscribe();
     };
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    console.log('AuthContext: Sign up attempt for:', email);
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -71,41 +65,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    if (error) {
-      console.error('AuthContext: Sign up failed:', error);
-    } else {
-      console.log('AuthContext: Sign up successful');
-    }
-
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('AuthContext: Sign in attempt for:', email);
-    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      console.error('AuthContext: Sign in failed:', error);
-    } else {
-      console.log('AuthContext: Sign in successful');
-    }
-
     return { error };
   };
 
   const signOut = async () => {
-    console.log('AuthContext: Sign out initiated');
-    
     const { error } = await supabase.auth.signOut();
-    
     if (error) {
       console.error('AuthContext: Sign out failed:', error);
-    } else {
-      console.log('AuthContext: Sign out successful');
     }
   };
 
@@ -125,4 +100,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
