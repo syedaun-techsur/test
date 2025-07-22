@@ -6,7 +6,7 @@ Contains simple functions and basic operations
 
 def add_numbers(a, b):
     """Add two numbers and return the result"""
-    return a + b
+    return
 
 def multiply_numbers(a, b):
     """Multiply two numbers and return the result"""
