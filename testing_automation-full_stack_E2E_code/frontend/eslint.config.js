@@ -1,30 +1,29 @@
 import js from '@eslint/js';
 import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default {
-  ignorePatterns: ['dist'],
-  extends: [
-    js.configs.recommended,
-    'plugin:@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended',
-    'plugin:react-refresh/recommended',
+  ignores: ['dist'],
+  overrides: [
+    {
+      files: ['**/*.{ts,tsx}'],
+      extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+      languageOptions: {
+        ecmaVersion: 2020,
+        globals: globals.browser,
+      },
+      plugins: {
+        'react-hooks': reactHooks,
+        'react-refresh': reactRefresh,
+        '@typescript-eslint': tsPlugin,
+      },
+      rules: {
+        ...reactHooks.configs.recommended.rules,
+        'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+        // You can add TS plugin rules here if needed
+      },
+    },
   ],
-  files: ['**/*.{ts,tsx}'],
-  parser: '@typescript-eslint/parser',
-  parserOptions: {
-    ecmaVersion: 2020,
-    sourceType: 'module',
-    project: './tsconfig.json',
-  },
-  env: {
-    browser: true,
-  },
-  globals: globals.browser,
-  plugins: ['react-hooks', 'react-refresh', '@typescript-eslint'],
-  rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-  },
 };
