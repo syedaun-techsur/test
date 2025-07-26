@@ -5,18 +5,18 @@ import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AuthProvider>
-        <Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Default route redirects to login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
-            
+
             {/* Login route */}
             <Route path="/login" element={<LoginForm />} />
-            
+
             {/* Protected dashboard route */}
             <Route 
               path="/dashboard" 
@@ -26,14 +26,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            
+
             {/* Catch all route redirects to login */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        </Router>
-      </AuthProvider>
-    </div>
+        </div>
+      </Router>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
