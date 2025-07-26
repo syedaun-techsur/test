@@ -7,6 +7,7 @@ import com.auth.service.AuthService;
 import com.auth.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -47,10 +48,11 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Test successful login returns valid token and user data")
     void testLoginSuccess() throws Exception {
-        when(authService.login(any(LoginRequest.class))).thenReturn(loginResponse);
+        when(authService.login(any())).thenReturn(loginResponse);
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isOk())
@@ -62,11 +64,12 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Test login failure with invalid credentials returns 401 Unauthorized")
     void testLoginWithInvalidCredentials() throws Exception {
-        when(authService.login(any(LoginRequest.class)))
+        when(authService.login(any()))
                 .thenThrow(new RuntimeException("Invalid email or password"));
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(validLoginRequest)))
                 .andExpect(status().isUnauthorized())
@@ -75,10 +78,11 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Test login with validation errors returns 400 Bad Request")
     void testLoginWithValidationErrors() throws Exception {
         LoginRequest invalidRequest = new LoginRequest("", "123");
 
-        mockMvc.perform(post("/api/login")
+        mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
@@ -87,15 +91,17 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Test get current user with valid token returns user data")
     void testGetCurrentUserSuccess() throws Exception {
-        String token = "Bearer mock-token";
+        String bearerToken = "Bearer mock-token";
+        String token = "mock-token";
 
-        when(jwtUtil.validateToken("mock-token")).thenReturn(true);
-        when(jwtUtil.getEmailFromToken("mock-token")).thenReturn("admin@example.com");
+        when(jwtUtil.validateToken(token)).thenReturn(true);
+        when(jwtUtil.getEmailFromToken(token)).thenReturn("admin@example.com");
         when(authService.getUserByEmail("admin@example.com")).thenReturn(userDto);
 
-        mockMvc.perform(get("/api/me")
-                .header("Authorization", token))
+        mockMvc.perform(get("/api/auth/me")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("admin@example.com"))
                 .andExpect(jsonPath("$.firstName").value("John"))
@@ -103,22 +109,25 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Test get current user with invalid token returns 401 Unauthorized")
     void testGetCurrentUserWithInvalidToken() throws Exception {
-        String token = "Bearer invalid-token";
+        String bearerToken = "Bearer invalid-token";
+        String token = "invalid-token";
 
-        when(jwtUtil.validateToken("invalid-token")).thenReturn(false);
+        when(jwtUtil.validateToken(token)).thenReturn(false);
 
-        mockMvc.perform(get("/api/me")
-                .header("Authorization", token))
+        mockMvc.perform(get("/api/auth/me")
+                .header("Authorization", bearerToken))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message").value("Invalid token"));
     }
 
     @Test
+    @DisplayName("Test logout returns success message")
     void testLogout() throws Exception {
-        mockMvc.perform(post("/api/logout"))
+        mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("{\"message\":\"Logout successful\"}"));
+                .andExpect(content().json("{\"message\":\"Logout successful\"}"));
     }
 }
