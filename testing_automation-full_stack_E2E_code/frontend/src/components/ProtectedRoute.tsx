@@ -1,19 +1,28 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }): JSX.Element => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
+    // Display loading spinner while auth state is loading
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" data-testid="loading-screen">
+      <div
+        className="min-h-screen bg-gray-50 flex items-center justify-center"
+        data-testid="loading-screen"
+        role="status"
+        aria-label="Loading"
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"
+            aria-hidden="true"
+          />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -24,7 +33,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  return children;
 };
 
 export default ProtectedRoute;
