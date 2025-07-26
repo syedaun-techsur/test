@@ -3,16 +3,15 @@ package com.auth.controller;
 import com.auth.dto.ErrorResponse;
 import com.auth.dto.LoginRequest;
 import com.auth.dto.LoginResponse;
+import com.auth.dto.UserDto;
 import com.auth.service.AuthService;
 import com.auth.util.JwtUtil;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,64 +20,63 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
-    
-    @Autowired
-    private AuthService authService;
-    
-    @Autowired
-    private JwtUtil jwtUtil;
-    
+
+    private final AuthService authService;
+    private final JwtUtil jwtUtil;
+
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
+        this.authService = authService;
+        this.jwtUtil = jwtUtil;
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, BindingResult bindingResult) {
-        
         if (bindingResult.hasErrors()) {
             List<String> errors = bindingResult.getFieldErrors()
                     .stream()
                     .map(error -> error.getDefaultMessage())
                     .collect(Collectors.toList());
-            
+
             ErrorResponse errorResponse = new ErrorResponse(400, "Validation failed", errors);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
-        
+
         try {
             LoginResponse response = authService.login(loginRequest);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             ErrorResponse errorResponse = new ErrorResponse(401, e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
-    
+
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null || token.isEmpty() || !token.startsWith("Bearer ")) {
+            ErrorResponse errorResponse = new ErrorResponse(401, "Missing or invalid Authorization header");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+
         try {
-            if (token == null || !token.startsWith("Bearer ")) {
-                ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
-                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-            }
-            // Remove "Bearer " prefix
             String jwtToken = token.substring(7);
-            
             if (!jwtUtil.validateToken(jwtToken)) {
                 ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
-                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
-            
+
             String email = jwtUtil.getEmailFromToken(jwtToken);
-            return ResponseEntity.ok(authService.getUserByEmail(email));
+            UserDto user = authService.getUserByEmail(email);
+
+            return ResponseEntity.ok(user);
         } catch (Exception e) {
             ErrorResponse errorResponse = new ErrorResponse(401, "Invalid token");
-            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
-    
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        // In a real application, you might want to blacklist the token
-        // For now, we'll just return a success message
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Logout successful");
-        return ResponseEntity.ok(response);
+        // For now, return a success message
+        return ResponseEntity.ok(Map.of("message", "Logout successful"));
     }
 }
