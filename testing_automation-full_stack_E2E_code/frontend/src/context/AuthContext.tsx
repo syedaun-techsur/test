@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 interface User {
   id: number;
@@ -35,59 +35,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on app startup
     const savedToken = localStorage.getItem('authToken');
     const savedUser = localStorage.getItem('user');
 
     if (savedToken && savedUser) {
-      setToken(savedToken);
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setToken(savedToken);
+        setUser(parsedUser);
       } catch {
-        setUser(null);
+        // If parsing fails, clear saved data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
       }
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; message?: string }> => {
-    try {
+  const login = useCallback(
+    async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8080/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
 
-      const data: { token?: string; user?: User; message?: string } = await response.json();
+        const data = await response.json();
 
-      if (response.ok && data.token && data.user) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        return { success: true };
-      } else {
+        if (response.ok) {
+          setToken(data.token);
+          setUser(data.user);
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          return { success: true };
+        }
         return { success: false, message: data.message || 'Login failed' };
+      } catch (_error: unknown) {
+        return { success: false, message: 'Network error. Please try again.' };
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      return { success: false, message: 'Network error. Please try again.' };
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    []
+  );
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-  };
+  }, []);
 
   const value = {
     user,
