@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFilesAfterEnv: './src/test/setup.ts',
+    setupFiles: './src/test/setup.ts',
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
