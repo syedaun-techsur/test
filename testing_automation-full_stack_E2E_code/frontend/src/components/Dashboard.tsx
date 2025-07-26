@@ -3,16 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { User, Settings, LogOut, Activity, Bell, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+interface Stat {
+  label: string;
+  value: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  color: string;
+}
+
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = React.useCallback(() => {
     logout();
     navigate('/login', { replace: true });
-  };
+  }, [logout, navigate]);
 
-  const stats = [
+  const stats: Stat[] = [
     { label: 'Total Projects', value: '12', icon: Activity, color: 'bg-blue-500' },
     { label: 'Active Tasks', value: '8', icon: Calendar, color: 'bg-green-500' },
     { label: 'Notifications', value: '3', icon: Bell, color: 'bg-yellow-500' },
@@ -30,10 +37,10 @@ const Dashboard: React.FC = () => {
               </div>
               <h1 className="ml-3 text-xl font-semibold text-gray-900">Dashboard</h1>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600" data-testid="welcome-message">
-                Welcome back, <span className="font-medium">{user?.firstName}</span>
+                Welcome back, <span className="font-medium">{user?.firstName ?? 'User'}</span>
               </div>
               <button
                 onClick={handleLogout}
@@ -53,22 +60,22 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Good morning, {user?.firstName}!
+            Good morning, {user?.firstName ?? 'User'}!
           </h2>
           <p className="text-gray-600">Here's what's happening with your account today.</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow" data-testid={`stat-card-${index}`}>
+          {stats.map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow" data-testid={`stat-card-${label}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-600">{label}</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+                <div className={`${color} p-3 rounded-lg`}>
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
             </div>
@@ -84,15 +91,15 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="first-name">{user?.firstName}</p>
+              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="first-name">{user?.firstName ?? '-'}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="last-name">{user?.lastName}</p>
+              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="last-name">{user?.lastName ?? '-'}</p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="email">{user?.email}</p>
+              <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg" data-testid="email">{user?.email ?? '-'}</p>
             </div>
           </div>
         </div>
@@ -104,15 +111,15 @@ const Dashboard: React.FC = () => {
             Quick Actions
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="update-profile-btn">
+            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="update-profile-btn" type="button">
               <h4 className="font-medium text-gray-900">Update Profile</h4>
               <p className="text-sm text-gray-600 mt-1">Change your personal information</p>
             </button>
-            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="security-settings-btn">
+            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="security-settings-btn" type="button">
               <h4 className="font-medium text-gray-900">Security Settings</h4>
               <p className="text-sm text-gray-600 mt-1">Manage your password and security</p>
             </button>
-            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="notifications-btn">
+            <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors" data-testid="notifications-btn" type="button">
               <h4 className="font-medium text-gray-900">Notifications</h4>
               <p className="text-sm text-gray-600 mt-1">Configure your notification preferences</p>
             </button>
