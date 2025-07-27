@@ -20,7 +20,6 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -56,23 +55,22 @@ const LoginForm: React.FC = () => {
       const newErrors = { ...prev };
       if (name === 'email') {
         if (validateEmail(value)) {
-          newErrors.email = undefined;
+          delete newErrors.email;
         }
-        // else, do not clear error
-      }
-      if (name === 'password') {
+        // else, keep existing error
+      } else if (name === 'password') {
         if (value.length >= 6) {
-          newErrors.password = undefined;
+          delete newErrors.password;
         }
-        // else, do not clear error
+        // else, keep existing error
       }
       return newErrors;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -80,17 +78,15 @@ const LoginForm: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    setErrors({});
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
-      // Redirect to dashboard on successful login
       navigate('/dashboard', { replace: true });
     } else {
       setErrors({ submit: result.message });
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -161,8 +157,9 @@ const LoginForm: React.FC = () => {
               <button
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword(prev => !prev)}
                 data-testid="toggle-password"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -171,7 +168,9 @@ const LoginForm: React.FC = () => {
                 )}
               </button>
             </div>
-            {errors.password && <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-600 text-sm mt-1" data-testid="password-error">{errors.password}</p>
+            )}
           </div>
 
           <button
