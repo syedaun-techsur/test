@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite';
+import { defineConfig, UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+const config: UserConfig = {
   plugins: [react()],
   test: {
     globals: true,
@@ -12,4 +12,6 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-});
+};
+
+export default defineConfig(config);
